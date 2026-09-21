@@ -1,4 +1,3 @@
-export default function Events(){return <><header><p className="text-sm font-medium text-[#0071e3]">COMMUNITY</p><h1 className="mt-2 text-3xl font-bold">Meet the people building next.</h1></header><article className="panel mt-8 p-7"><p className="text-sm font-medium text-[#0071e3]">OCT 04 · ONLINE</p><h2 className="mt-2 text-xl font-bold">BuildNext Product Night</h2><p className="muted mt-3">A practical look at turning student projects into compelling case studies.</p><div className="mt-5 flex items-center justify-between"><span className="muted text-sm">28 / 100 registered</span><button className="btn btn-primary">Register</button></div></article></>}
 'use client';
 
 import { useState, useEffect } from 'react';
