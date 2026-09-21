@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: buildnext
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_TRUST_HOST
+        value: true
+      - key: MONGODB_URI
+        sync: false
