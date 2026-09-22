@@ -14,7 +14,7 @@ export default function OpportunitiesPage() {
           className="object-cover opacity-35"
         />
         <div className="relative z-10 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/10 text-[11px] font-semibold text-[#2997ff] backdrop-blur-xl mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/10 text-[11px] font-semibold text-[#ff6b2b] backdrop-blur-xl mb-3">
             <Sparkles className="h-3 w-3" />
             <span>INDUSTRY HIRING PIPELINE</span>
           </div>

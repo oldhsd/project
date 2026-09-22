@@ -45,3 +45,12 @@ export async function POST(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+  const certificates = DataStore.getCertificates();
+  const idx = certificates.findIndex(c => c.id === id);
+  if (idx !== -1) certificates.splice(idx, 1);
+  return NextResponse.json({ success: true });
+}

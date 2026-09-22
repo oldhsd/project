@@ -36,7 +36,7 @@ export default function CertificatesPage() {
           href="/verify"
           className="apple-btn-secondary h-10 px-4 rounded-xl text-xs font-semibold flex items-center gap-1.5 shrink-0"
         >
-          <Search className="h-3.5 w-3.5 text-[#0071e3]" />
+          <Search className="h-3.5 w-3.5 text-[#e8590c]" />
           <span>Public Verification Registry</span>
         </Link>
       </header>
@@ -52,7 +52,7 @@ export default function CertificatesPage() {
             <div>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#0071e3]/10 text-[#0071e3]">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#e8590c]/10 text-[#e8590c]">
                     <Award className="h-5 w-5" />
                   </div>
                   <div>
@@ -69,7 +69,7 @@ export default function CertificatesPage() {
               <div className="mt-6">
                 <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">Conferred To</p>
                 <h3 className="text-base font-bold text-[var(--ink)] mt-0.5">{cert.studentName}</h3>
-                <p className="text-xs font-semibold text-[#0071e3] mt-2">{cert.trackName}</p>
+                <p className="text-xs font-semibold text-[#e8590c] mt-2">{cert.trackName}</p>
                 <p className="text-[11px] text-[var(--muted)] mt-1">Domain: {cert.category}</p>
               </div>
             </div>

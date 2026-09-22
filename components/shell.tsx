@@ -45,7 +45,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b bg-[var(--surface)]/80 px-4 backdrop-blur-2xl md:sticky md:inset-auto md:h-screen md:flex-col md:items-stretch md:border-b-0 md:border-r md:px-3.5 md:py-6">
         <div className="flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#0071e3] text-white font-semibold text-xs shadow-sm">BN</div>
+            <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#e8590c] text-white font-semibold text-xs shadow-sm">BN</div>
             <span className="font-semibold tracking-tight text-sm text-[var(--ink)]">BuildNext</span>
           </Link>
         </div>
@@ -64,7 +64,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 {isActive && (
                   <motion.span layoutId="active-pill" className="absolute inset-0 rounded-lg bg-[var(--surface-2)]" transition={{ type: 'spring', stiffness: 350, damping: 30 }} />
                 )}
-                <Icon className={`relative h-4 w-4 shrink-0 ${isActive ? 'text-[#0071e3]' : 'text-[var(--muted)]'}`} />
+                <Icon className={`relative h-4 w-4 shrink-0 ${isActive ? 'text-[#e8590c]' : 'text-[var(--muted)]'}`} />
                 <span className="relative">{label}</span>
               </Link>
             );
@@ -82,10 +82,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-[var(--ink)]">Level 2 · Builder</span>
-              <span className="text-[10px] font-medium text-[#0071e3]">680 XP</span>
+              <span className="text-[10px] font-medium text-[#e8590c]">680 XP</span>
             </div>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--line)]">
-              <div className="h-full w-[68%] rounded-full bg-[#0071e3] transition-all duration-500" />
+              <div className="h-full w-[68%] rounded-full bg-[#e8590c] transition-all duration-500" />
             </div>
             <p className="mt-2 text-[10px] text-[var(--muted)]">320 XP to Developer</p>
           </div>
@@ -114,7 +114,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         {navItems.slice(0, 5).map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
           return (
-            <Link key={href} href={href} className={`flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition ${isActive ? 'text-[#0071e3] font-semibold' : 'text-[var(--muted)]'}`}>
+            <Link key={href} href={href} className={`flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition ${isActive ? 'text-[#e8590c] font-semibold' : 'text-[var(--muted)]'}`}>
               <Icon className="h-4 w-4" />
               <span>{label}</span>
             </Link>

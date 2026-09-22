@@ -152,7 +152,7 @@ export function AuthForm({ signup = false }: { signup?: boolean }) {
       </div>
       <p className="text-center text-xs text-[var(--muted)] pt-1">
         {signup ? 'Already have an account? ' : 'New to BuildNext? '}
-        <Link className="text-[#0071e3] font-semibold hover:underline" href={signup ? '/login' : '/signup'}>
+        <Link className="text-[#e8590c] font-semibold hover:underline" href={signup ? '/login' : '/signup'}>
           {signup ? 'Sign In' : 'Create an Account'}
         </Link>
       </p>

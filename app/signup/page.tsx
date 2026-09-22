@@ -7,7 +7,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md apple-panel p-8 rounded-2xl shadow-xl space-y-6">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#0071e3] text-white font-bold text-xs">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#e8590c] text-white font-bold text-xs">
               BN
             </div>
           </Link>

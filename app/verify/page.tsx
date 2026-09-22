@@ -37,11 +37,11 @@ export default function VerifyPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex flex-col justify-between selection:bg-[#0071e3] selection:text-white">
+    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex flex-col justify-between selection:bg-[#e8590c] selection:text-white">
       {/* Top Bar */}
       <header className="border-b border-white/[0.08] px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#0071e3] text-white font-bold text-xs">
+          <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#e8590c] text-white font-bold text-xs">
             BN
           </div>
           <span className="font-semibold text-sm tracking-tight text-white">BuildNext Credential Registry</span>
@@ -58,7 +58,7 @@ export default function VerifyPortalPage() {
       {/* Main Content */}
       <main className="px-4 py-16 max-w-xl mx-auto w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[11px] font-medium text-[#2997ff] mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[11px] font-medium text-[#ff6b2b] mb-3">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Official Verifier</span>
           </div>
@@ -80,7 +80,7 @@ export default function VerifyPortalPage() {
               value={certId}
               onChange={(e) => setCertId(e.target.value)}
               placeholder="e.g. BN-2026-WD8921"
-              className="w-full rounded-xl border border-white/[0.12] bg-[#141418] pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none focus:border-[#2997ff]"
+              className="w-full rounded-xl border border-white/[0.12] bg-[#141418] pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none focus:border-[#ff6b2b]"
             />
           </div>
           <button
@@ -97,7 +97,7 @@ export default function VerifyPortalPage() {
           <button
             type="button"
             onClick={() => setCertId('BN-2026-WD8921')}
-            className="text-[#2997ff] hover:underline font-mono"
+            className="text-[#ff6b2b] hover:underline font-mono"
           >
             BN-2026-WD8921
           </button>
@@ -105,7 +105,7 @@ export default function VerifyPortalPage() {
           <button
             type="button"
             onClick={() => setCertId('BN-2026-AI4410')}
-            className="text-[#2997ff] hover:underline font-mono"
+            className="text-[#ff6b2b] hover:underline font-mono"
           >
             BN-2026-AI4410
           </button>
@@ -121,7 +121,7 @@ export default function VerifyPortalPage() {
 
         {/* Verified Credential Card */}
         {result && (
-          <div className="mt-8 rounded-2xl border border-[#2997ff]/30 bg-[#121218] p-6 shadow-2xl backdrop-blur-2xl">
+          <div className="mt-8 rounded-2xl border border-[#ff6b2b]/30 bg-[#121218] p-6 shadow-2xl backdrop-blur-2xl">
             <div className="flex items-start justify-between pb-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
@@ -152,7 +152,7 @@ export default function VerifyPortalPage() {
 
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-[#86868b]">For Mastery in Track</p>
-                <h3 className="mt-1 text-base font-semibold text-[#2997ff]">
+                <h3 className="mt-1 text-base font-semibold text-[#ff6b2b]">
                   {result.trackName}
                 </h3>
               </div>

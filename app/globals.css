@@ -13,10 +13,10 @@
     --ink: #1d1d1f;
     --muted: #86868b;
     --line: rgba(0, 0, 0, 0.08);
-    --line-focus: #0071e3;
-    --accent: #0071e3;
-    --accent-hover: #0077ED;
-    --accent-glow: rgba(0, 113, 227, 0.15);
+    --line-focus: #e8590c;
+    --accent: #e8590c;
+    --accent-hover: #d94f00;
+    --accent-glow: rgba(232, 89, 12, 0.15);
     --coral: #ff453a;
     --emerald: #30d158;
     --amber: #ff9f0a;
@@ -30,10 +30,10 @@
     --ink: #f5f5f7;
     --muted: #86868b;
     --line: rgba(255, 255, 255, 0.09);
-    --line-focus: #2997ff;
-    --accent: #2997ff;
-    --accent-hover: #0071e3;
-    --accent-glow: rgba(41, 151, 255, 0.2);
+    --line-focus: #ff6b2b;
+    --accent: #ff6b2b;
+    --accent-hover: #e8590c;
+    --accent-glow: rgba(255, 107, 43, 0.2);
     --coral: #ff453a;
     --emerald: #30d158;
     --amber: #ffd60a;
@@ -89,7 +89,7 @@
   }
 
   .apple-card:hover {
-    border-color: rgba(0, 113, 227, 0.4);
+    border-color: rgba(232, 89, 12, 0.4);
     transform: translateY(-2px);
   }
 
@@ -144,14 +144,14 @@
   }
 
   .apple-btn-primary {
-    background: #0071e3;
+    background: #e8590c;
     color: #ffffff;
     border: 1px solid transparent;
   }
 
   .apple-btn-primary:hover {
-    background: #0077ED;
-    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+    background: #d94f00;
+    box-shadow: 0 4px 14px rgba(232, 89, 12, 0.3);
   }
 
   .apple-btn-secondary {

@@ -64,11 +64,11 @@ export default function EventsPage() {
       )}
 
       {/* Featured Partner Banner */}
-      <div className="apple-panel p-6 sm:p-7 rounded-2xl bg-gradient-to-r from-[#0071e3]/10 to-transparent border border-[#0071e3]/20">
+      <div className="apple-panel p-6 sm:p-7 rounded-2xl bg-gradient-to-r from-[#e8590c]/10 to-transparent border border-[#e8590c]/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#0071e3] text-white">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e8590c] text-white">
                 OFFICIAL PARTNERSHIP
               </span>
               <span className="text-xs font-semibold text-[var(--ink)]">GeeksforGeeks x BuildNext</span>
@@ -105,7 +105,7 @@ export default function EventsPage() {
             >
               <div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#0071e3]">{ev.organizer}</span>
+                  <span className="font-semibold text-[#e8590c]">{ev.organizer}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                     ev.status === 'Open' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500'
                   }`}>
@@ -123,11 +123,11 @@ export default function EventsPage() {
                 {/* Event Metadata */}
                 <div className="mt-4 space-y-1.5 text-xs text-[var(--muted)]">
                   <div className="flex items-center gap-2">
-                    <CalendarDays className="h-3.5 w-3.5 text-[#0071e3]" />
+                    <CalendarDays className="h-3.5 w-3.5 text-[#e8590c]" />
                     <span>{ev.date} · {ev.time}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Users className="h-3.5 w-3.5 text-[#0071e3]" />
+                    <Users className="h-3.5 w-3.5 text-[#e8590c]" />
                     <span>{ev.spotsFilled} / {ev.spotsTotal} students registered ({ev.mode})</span>
                   </div>
                 </div>

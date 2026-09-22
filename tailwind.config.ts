@@ -7,8 +7,8 @@ const tailwindConfig: Config = {
     extend: {
       colors: {
         apple: {
-          blue: '#0071e3',
-          'blue-hover': '#0077ED',
+          blue: '#e8590c',
+          'blue-hover': '#d94f00',
           dark: '#000000',
           panel: '#0d0d11',
           card: '#141418',

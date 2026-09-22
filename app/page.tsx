@@ -6,10 +6,10 @@ import { initialTracks } from '@/lib/data-service';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#000000] text-[#f5f5f7] selection:bg-[#0071e3] selection:text-white">
+    <div className="min-h-screen bg-[#000000] text-[#f5f5f7] selection:bg-[#e8590c] selection:text-white">
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.08] bg-[#000000]/70 backdrop-blur-2xl px-6 py-3.5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#0071e3] text-white font-semibold text-xs shadow-sm">
+          <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#e8590c] text-white font-semibold text-xs shadow-sm">
             BN
           </div>
           <span className="font-semibold tracking-tight text-sm text-white">BuildNext</span>
@@ -31,7 +31,7 @@ export default function HomePage() {
       </nav>
 
       <section className="pt-32 pb-20 px-6 max-w-5xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.12] bg-white/[0.04] text-xs font-medium text-[#2997ff] backdrop-blur-xl mb-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.12] bg-white/[0.04] text-xs font-medium text-[#ff6b2b] backdrop-blur-xl mb-6">
           <Sparkles className="h-3.5 w-3.5" />
           <span>The Multi-Disciplinary Student Ecosystem</span>
         </div>
@@ -45,7 +45,7 @@ export default function HomePage() {
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3.5">
-          <Link href="/dashboard" className="apple-btn-primary h-11 px-6 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg shadow-[#0071e3]/20">
+          <Link href="/dashboard" className="apple-btn-primary h-11 px-6 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg shadow-[#e8590c]/20">
             <span>Enter Student Portal</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -80,10 +80,10 @@ export default function HomePage() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {initialTracks.slice(0, 6).map((track) => (
-            <div key={track.id} className="rounded-2xl border border-white/[0.08] bg-[#0d0d11] p-6 hover:border-[#2997ff]/40 transition duration-300 flex flex-col justify-between">
+            <div key={track.id} className="rounded-2xl border border-white/[0.08] bg-[#0d0d11] p-6 hover:border-[#ff6b2b]/40 transition duration-300 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#2997ff] px-2.5 py-1 rounded-full bg-[#0071e3]/15">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#ff6b2b] px-2.5 py-1 rounded-full bg-[#e8590c]/15">
                     {track.category}
                   </span>
                   <span className="text-xs text-[#6e6e73]">{track.difficulty}</span>
@@ -94,7 +94,7 @@ export default function HomePage() {
 
               <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs">
                 <span className="text-[#6e6e73]">{track.estimatedHours} hrs · {track.modulesCount} modules</span>
-                <Link href={`/tracks/${track.id}`} className="text-[#2997ff] font-medium hover:underline flex items-center gap-1">
+                <Link href={`/tracks/${track.id}`} className="text-[#ff6b2b] font-medium hover:underline flex items-center gap-1">
                   <span>View Track</span>
                   <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -123,8 +123,8 @@ export default function HomePage() {
 
             <div className="rounded-2xl border border-white/[0.08] bg-[#121218] p-6">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-[#2997ff]">Elite Globex</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0071e3]/15 text-[#2997ff]">Internships</span>
+                <span className="font-bold text-sm text-[#ff6b2b]">Elite Globex</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e8590c]/15 text-[#ff6b2b]">Internships</span>
               </div>
               <p className="mt-3 text-xs text-[#86868b]">Direct pipeline into full stack and applied AI research roles with stipends up to ₹30,000/month.</p>
               <div className="mt-4 text-xs font-semibold text-white">Pre-Placement Offers (PPOs)</div>
@@ -143,7 +143,7 @@ export default function HomePage() {
       </section>
 
       <section className="py-20 px-6 border-t border-white/[0.08] text-center max-w-3xl mx-auto">
-        <ShieldCheck className="h-10 w-10 text-[#2997ff] mx-auto mb-4" />
+        <ShieldCheck className="h-10 w-10 text-[#ff6b2b] mx-auto mb-4" />
         <h2 className="text-3xl font-bold tracking-tight text-white">Every achievement is publicly verifiable.</h2>
         <p className="mt-3 text-xs sm:text-sm text-[#86868b]">
           Employers and academic partners can verify authentic credentials using our tamper-proof verification engine.

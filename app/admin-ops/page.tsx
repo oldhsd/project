@@ -226,11 +226,11 @@ export default function AdminOpsStudio() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] selection:bg-[#0071e3] selection:text-white">
+    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] selection:bg-[#e8590c] selection:text-white">
       {/* Top Operations Header */}
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#09090b]/80 backdrop-blur-2xl px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#0071e3] text-white font-bold text-xs shadow-md">
+          <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#e8590c] text-white font-bold text-xs shadow-md">
             OPS
           </div>
           <div>
@@ -311,7 +311,7 @@ export default function AdminOpsStudio() {
             {/* Quick Metrics */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: 'Active Learners', val: analytics?.activeLearners || 940, note: '+12% this month', icon: Users, tone: 'text-[#2997ff]' },
+                { label: 'Active Learners', val: analytics?.activeLearners || 940, note: '+12% this month', icon: Users, tone: 'text-[#ff6b2b]' },
                 { label: 'Published Tracks', val: tracks.length, note: '7 Disciplinary Areas', icon: BookOpen, tone: 'text-purple-400' },
                 { label: 'Partner Opportunities', val: opportunities.length, note: 'Elite Globex & GFG Active', icon: BriefcaseBusiness, tone: 'text-emerald-400' },
                 { label: 'Verifiable Credentials', val: certificates.length, note: '100% Cryptographic-verified', icon: Award, tone: 'text-[#ffd60a]' }
@@ -337,7 +337,7 @@ export default function AdminOpsStudio() {
                   </div>
                   <button
                     onClick={() => setActiveTab('applications')}
-                    className="text-xs text-[#2997ff] hover:underline"
+                    className="text-xs text-[#ff6b2b] hover:underline"
                   >
                     View All ({applications.length})
                   </button>
@@ -353,7 +353,7 @@ export default function AdminOpsStudio() {
                       <div className="flex items-center gap-3">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
                           app.status === 'Selected' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20' :
-                          app.status === 'Shortlisted' ? 'bg-[#0071e3]/15 text-[#2997ff] border border-[#2997ff]/20' :
+                          app.status === 'Shortlisted' ? 'bg-[#e8590c]/15 text-[#ff6b2b] border border-[#ff6b2b]/20' :
                           'bg-white/[0.06] text-[#86868b]'
                         }`}>
                           {app.status}
@@ -382,7 +382,7 @@ export default function AdminOpsStudio() {
                   className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] text-xs font-medium text-white transition text-left"
                 >
                   <span className="flex items-center gap-2">
-                    <Plus className="h-4 w-4 text-[#2997ff]" />
+                    <Plus className="h-4 w-4 text-[#ff6b2b]" />
                     <span>Publish Opportunity</span>
                   </span>
                   <span className="text-[10px] text-[#6e6e73]">Elite / GFG</span>
@@ -444,7 +444,7 @@ export default function AdminOpsStudio() {
                 <div key={t.id} className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-5 backdrop-blur-xl flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#2997ff] text-[10px] font-medium">
+                      <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#ff6b2b] text-[10px] font-medium">
                         {t.category}
                       </span>
                       <span className="text-[10px] text-[#6e6e73]">{t.difficulty}</span>
@@ -462,7 +462,7 @@ export default function AdminOpsStudio() {
                     <Link
                       href={`/tracks/${t.id}`}
                       target="_blank"
-                      className="text-xs text-[#2997ff] hover:underline flex items-center gap-1"
+                      className="text-xs text-[#ff6b2b] hover:underline flex items-center gap-1"
                     >
                       <span>Preview</span>
                       <ExternalLink className="h-3 w-3" />
@@ -505,7 +505,7 @@ export default function AdminOpsStudio() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-semibold text-white">{opp.title}</h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#0071e3]/15 text-[#2997ff]">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#e8590c]/15 text-[#ff6b2b]">
                           {opp.company}
                         </span>
                         {opp.partnerBadge && (
@@ -571,7 +571,7 @@ export default function AdminOpsStudio() {
                       </td>
                       <td className="py-3 px-4">
                         <p className="font-medium text-white">{app.roleTitle}</p>
-                        <p className="text-[11px] text-[#2997ff]">{app.company}</p>
+                        <p className="text-[11px] text-[#ff6b2b]">{app.company}</p>
                       </td>
                       <td className="py-3 px-4 text-[#86868b]">
                         {app.stream} (Year {app.year})
@@ -589,7 +589,7 @@ export default function AdminOpsStudio() {
                         <select
                           value={app.status}
                           onChange={(e) => handleUpdateAppStatus(app.id, e.target.value as any)}
-                          className="rounded-lg border border-white/[0.12] bg-[#09090b] px-2.5 py-1 text-xs text-white outline-none focus:border-[#2997ff]"
+                          className="rounded-lg border border-white/[0.12] bg-[#09090b] px-2.5 py-1 text-xs text-white outline-none focus:border-[#ff6b2b]"
                         >
                           <option value="Under Review">Under Review</option>
                           <option value="Shortlisted">Shortlisted</option>
@@ -626,7 +626,7 @@ export default function AdminOpsStudio() {
               {events.map((ev) => (
                 <div key={ev.id} className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-5 backdrop-blur-xl">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="px-2 py-0.5 rounded-full bg-[#0071e3]/15 text-[#2997ff] text-[10px] font-medium">
+                    <span className="px-2 py-0.5 rounded-full bg-[#e8590c]/15 text-[#ff6b2b] text-[10px] font-medium">
                       {ev.organizer}
                     </span>
                     <span className="text-[10px] text-emerald-400">{ev.status}</span>
@@ -670,7 +670,7 @@ export default function AdminOpsStudio() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-[#ffd60a] font-semibold">{cert.certificateId}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[10px] text-[#2997ff]">
+                        <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[10px] text-[#ff6b2b]">
                           {cert.grade}
                         </span>
                       </div>
@@ -682,7 +682,7 @@ export default function AdminOpsStudio() {
                       <Link
                         href={`/verify/${cert.certificateId}`}
                         target="_blank"
-                        className="apple-btn-secondary h-8 px-3 rounded-lg text-xs flex items-center gap-1 text-[#2997ff]"
+                        className="apple-btn-secondary h-8 px-3 rounded-lg text-xs flex items-center gap-1 text-[#ff6b2b]"
                       >
                         <ExternalLink className="h-3 w-3" />
                         <span>Public Proof</span>

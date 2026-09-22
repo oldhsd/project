@@ -1,16 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, RotateCcw, Trophy, Award, Sparkles } from 'lucide-react';
-import { initialAssessments, Assessment } from '@/lib/data-service';
+import { Assessment } from '@/lib/data-service';
 
 export function AssessmentRunner() {
-  const [selectedAssessment, setSelectedAssessment] = useState<Assessment>(initialAssessments[0]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [complete, setComplete] = useState(false);
 
-  const questions = selectedAssessment.questions;
+  useEffect(() => {
+    fetch('/api/content/assessments')
+      .then(res => res.json())
+      .then(data => {
+        if (data.assessments && data.assessments.length > 0) {
+          setAssessments(data.assessments);
+          setSelectedAssessment(data.assessments[0]);
+        }
+      })
+      .catch(() => setAssessments([]));
+  }, []);
+
+  if (!assessments.length || !selectedAssessment) {
+    return (
+      <div className="apple-panel p-10 rounded-2xl text-center space-y-4">
+        <Trophy className="h-10 w-10 text-[var(--muted)] mx-auto" />
+        <h3 className="font-bold text-[var(--ink)]">No assessments available</h3>
+        <p className="text-sm text-[var(--muted)]">Check back later when new assessments are published.</p>
+      </div>
+    );
+  }
+
+  const questions = selectedAssessment.questions || [];
   const score = answers.reduce((sum, a, i) => sum + (a === questions[i]?.correctIndex ? 1 : 0), 0);
   const percentage = Math.round((score / questions.length) * 100);
   const passed = percentage >= selectedAssessment.passingScore;
@@ -89,13 +112,13 @@ export function AssessmentRunner() {
     <div className="space-y-6">
       {/* Assessment Selector Tabs */}
       <div className="flex gap-2 pb-1 overflow-x-auto">
-        {initialAssessments.map((a) => (
+        {assessments.map((a) => (
           <button
             key={a.id}
             onClick={() => handleSelectTrack(a)}
             className={`rounded-xl px-4 py-2 text-xs font-semibold whitespace-nowrap transition border ${
               selectedAssessment.id === a.id
-                ? 'bg-[#0071e3] text-white border-transparent shadow-sm'
+                ? 'bg-[#e8590c] text-white border-transparent shadow-sm'
                 : 'bg-[var(--surface)] text-[var(--muted)] border-[var(--line)] hover:text-[var(--ink)]'
             }`}
           >
@@ -114,7 +137,7 @@ export function AssessmentRunner() {
             </p>
           </div>
           <div className="flex items-center gap-2 text-xs font-medium text-[var(--muted)]">
-            <Clock3 className="h-4 w-4 text-[#0071e3]" />
+            <Clock3 className="h-4 w-4 text-[#e8590c]" />
             <span>{selectedAssessment.duration}</span>
           </div>
         </div>
@@ -133,12 +156,12 @@ export function AssessmentRunner() {
                 }}
                 className={`flex items-center gap-3.5 p-3.5 rounded-xl border text-left text-xs font-medium transition ${
                   selectedAnswer === idx
-                    ? 'border-[#0071e3] bg-[#0071e3]/10 text-[var(--ink)] font-semibold'
+                    ? 'border-[#e8590c] bg-[#e8590c]/10 text-[var(--ink)] font-semibold'
                     : 'border-[var(--line)] bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] text-[var(--ink)]'
                 }`}
               >
                 <span className={`grid h-6 w-6 place-items-center rounded-lg border text-[11px] font-bold ${
-                  selectedAnswer === idx ? 'border-[#0071e3] bg-[#0071e3] text-white' : 'border-[var(--line)] bg-[var(--surface)]'
+                  selectedAnswer === idx ? 'border-[#e8590c] bg-[#e8590c] text-white' : 'border-[var(--line)] bg-[var(--surface)]'
                 }`}>
                   {String.fromCharCode(65 + idx)}
                 </span>

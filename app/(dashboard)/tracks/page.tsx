@@ -75,7 +75,7 @@ export default function TracksPage() {
               onClick={() => setCategory(c)}
               className={`rounded-full px-3.5 py-1.5 text-xs font-medium whitespace-nowrap transition ${
                 category === c
-                  ? 'bg-[#0071e3] text-white shadow-sm font-semibold'
+                  ? 'bg-[#e8590c] text-white shadow-sm font-semibold'
                   : 'bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--line)]'
               }`}
             >
@@ -106,7 +106,7 @@ export default function TracksPage() {
           >
             <div>
               <div className="flex items-center justify-between text-xs">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#0071e3]/10 text-[#0071e3]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#e8590c]/10 text-[#e8590c]">
                   {t.category}
                 </span>
                 <span className="text-[11px] text-[var(--muted)]">{t.difficulty}</span>
@@ -137,7 +137,7 @@ export default function TracksPage() {
               </span>
               <Link
                 href={`/tracks/${t.id}`}
-                className="text-xs font-semibold text-[#0071e3] hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-[#e8590c] hover:underline flex items-center gap-1"
               >
                 <span>Syllabus & Start</span>
                 <ArrowRight className="h-3 w-3" />

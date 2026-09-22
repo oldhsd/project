@@ -27,7 +27,7 @@ export default async function ProfilePage() {
       <section className="apple-panel p-6 sm:p-8 rounded-2xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#0071e3] text-white text-2xl font-bold shadow-md">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#e8590c] text-white text-2xl font-bold shadow-md">
               {userName.charAt(0)}
             </div>
             <div>
@@ -35,7 +35,7 @@ export default async function ProfilePage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-[var(--ink)] tracking-tight">
                   {userName}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#0071e3]/10 text-[#0071e3]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#e8590c]/10 text-[#e8590c]">
                   Level 2 Builder
                 </span>
               </div>
@@ -82,7 +82,7 @@ export default async function ProfilePage() {
         <div className="apple-card p-5 rounded-2xl">
           <div className="flex items-center justify-between text-xs text-[var(--muted)]">
             <span>Verified Credentials</span>
-            <Award className="h-4 w-4 text-[#0071e3]" />
+            <Award className="h-4 w-4 text-[#e8590c]" />
           </div>
           <p className="mt-2 text-2xl font-bold text-[var(--ink)]">1 Issued</p>
           <p className="text-[11px] text-[var(--muted)] mt-0.5">Distinction in Web Systems</p>
@@ -103,7 +103,7 @@ export default async function ProfilePage() {
         <p className="apple-eyebrow">VERIFIED BADGES</p>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { title: 'First Project Shipped', note: 'Portfolio proof verified', icon: Code2, tone: 'text-[#0071e3]' },
+            { title: 'First Project Shipped', note: 'Portfolio proof verified', icon: Code2, tone: 'text-[#e8590c]' },
             { title: '7-Day Challenge Streak', note: 'Consistent daily problem solve', icon: Flame, tone: 'text-orange-500' },
             { title: 'Assessment Distinction', note: 'Score > 85% in System Design', icon: Award, tone: 'text-[#ffd60a]' }
           ].map(({ title, note, icon: Icon, tone }) => (

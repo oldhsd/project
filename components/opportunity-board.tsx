@@ -23,51 +23,9 @@ export type Opportunity = {
   partnerBadge?: string;
 };
 
-// Seeded demo data (used when API is unavailable)
-const seeded: Opportunity[] = [
-  {
-    id: 'design-intern',
-    title: 'Product Design Intern',
-    company: 'Luma Labs',
-    type: 'Internship',
-    location: 'Bengaluru',
-    mode: 'Hybrid',
-    description: 'Work with a small product team on research, interaction systems, and a live student‑facing product.',
-    skills: ['Figma', 'Research', 'UI systems'],
-    featured: true,
-    stipend: '₹15k / month',
-    deadline: '18 Aug',
-    partnerBadge: 'Featured'
-  },
-  {
-    id: 'ai-fellow',
-    title: 'Applied AI Fellow',
-    company: 'Northstar',
-    type: 'Fellowship',
-    location: 'Remote',
-    mode: 'Remote',
-    description: 'Build practical AI workflows with mentors and publish a portfolio‑ready capstone.',
-    skills: ['Python', 'LLMs', 'Problem solving'],
-    stipend: 'Stipend available',
-    deadline: '22 Aug'
-  },
-  {
-    id: 'community-challenge',
-    title: 'Community Challenge 04',
-    company: 'BuildNext',
-    type: 'Competition',
-    location: 'Online',
-    mode: 'Online',
-    description: 'Form a cross‑disciplinary crew and solve a real workflow challenge in 72 hours.',
-    skills: ['Collaboration', 'Pitching', 'Build'],
-    stipend: 'Prize pool',
-    deadline: '30 Aug'
-  }
-];
-
 export function OpportunityBoard() {
   const { data: session } = useSession();
-  const [items, setItems] = useState<Opportunity[]>(seeded);
+  const [items, setItems] = useState<Opportunity[]>([]);
   const [filter, setFilter] = useState('All');
   const [activeModal, setActiveModal] = useState<Opportunity | null>(null);
   const [consent, setConsent] = useState(true);
@@ -82,7 +40,7 @@ export function OpportunityBoard() {
       .then((data) => {
         if (data.opportunities) setItems(data.opportunities);
       })
-      .catch(() => setItems(seeded));
+      .catch(() => setItems([]));
   }, []);
 
   const visible = filter === 'All' ? items : items.filter((i) => i.type === filter);
@@ -135,7 +93,7 @@ export function OpportunityBoard() {
           <button
             key={type}
             onClick={() => setFilter(type)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${filter === type ? 'bg-[#0071e3] text-white shadow-sm' : 'bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--ink)]'}`}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${filter === type ? 'bg-[#e8590c] text-white shadow-sm' : 'bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--ink)]'}`}
           >
             {type}
           </button>
@@ -165,7 +123,7 @@ export function OpportunityBoard() {
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#0071e3]/10 text-[#0071e3] font-semibold text-xs shrink-0">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#e8590c]/10 text-[#e8590c] font-semibold text-xs shrink-0">
                       <Building2 className="h-5 w-5" />
                     </div>
                     <div>

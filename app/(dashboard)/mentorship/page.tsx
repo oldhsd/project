@@ -92,7 +92,7 @@ export default function MentorshipPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-[11px] text-[var(--muted)] flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-[#0071e3]" />
+                    <Calendar className="h-3 w-3 text-[#e8590c]" />
                     <span>{s.slot}</span>
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-500">
@@ -114,7 +114,7 @@ export default function MentorshipPage() {
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#0071e3]/10 text-[#0071e3]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#e8590c]/10 text-[#e8590c]">
                   {m.company}
                 </span>
                 <span className="text-[11px] text-[var(--muted)]">{m.experience}</span>
@@ -123,7 +123,7 @@ export default function MentorshipPage() {
               <h2 className="mt-4 text-base font-bold text-[var(--ink)]">
                 {m.name}
               </h2>
-              <p className="text-xs font-semibold text-[#0071e3] mt-0.5">{m.role} · {m.company}</p>
+              <p className="text-xs font-semibold text-[#e8590c] mt-0.5">{m.role} · {m.company}</p>
               <p className="text-[11px] text-[var(--muted)] font-medium mt-1">{m.domain}</p>
 
               <p className="mt-3 text-xs text-[var(--muted)] leading-relaxed">
@@ -170,7 +170,7 @@ export default function MentorshipPage() {
                     onClick={() => setSelectedSlot(slot)}
                     className={`p-3 rounded-xl border text-left text-xs font-medium transition ${
                       selectedSlot === slot
-                        ? 'border-[#0071e3] bg-[#0071e3]/10 text-[var(--ink)] font-semibold'
+                        ? 'border-[#e8590c] bg-[#e8590c]/10 text-[var(--ink)] font-semibold'
                         : 'border-[var(--line)] bg-[var(--surface-2)] text-[var(--ink)]'
                     }`}
                   >

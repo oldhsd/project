@@ -82,7 +82,7 @@ export default function ProjectsPage() {
             onClick={() => setFilter(cat)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               filter === cat
-                ? 'bg-[#0071e3] text-white shadow-sm'
+                ? 'bg-[#e8590c] text-white shadow-sm'
                 : 'bg-[var(--surface-2)] text-[var(--muted)] hover:text-[var(--ink)]'
             }`}
           >
@@ -101,12 +101,12 @@ export default function ProjectsPage() {
                 <div>
                   <p className="font-bold text-[var(--ink)]">{sub.projectTitle}</p>
                   <div className="flex items-center gap-3 mt-1 text-[11px] text-[var(--muted)]">
-                    <a href={sub.githubUrl} target="_blank" rel="noreferrer" className="text-[#0071e3] hover:underline flex items-center gap-1">
+                    <a href={sub.githubUrl} target="_blank" rel="noreferrer" className="text-[#e8590c] hover:underline flex items-center gap-1">
                       <Github className="h-3 w-3" />
                       <span>Repository</span>
                     </a>
                     {sub.demoUrl && (
-                      <a href={sub.demoUrl} target="_blank" rel="noreferrer" className="text-[#0071e3] hover:underline flex items-center gap-1">
+                      <a href={sub.demoUrl} target="_blank" rel="noreferrer" className="text-[#e8590c] hover:underline flex items-center gap-1">
                         <ExternalLink className="h-3 w-3" />
                         <span>Live Demo</span>
                       </a>
@@ -121,7 +121,7 @@ export default function ProjectsPage() {
                   }`}>
                     {sub.status}
                   </span>
-                  <span className="text-[11px] font-semibold text-[#0071e3]">+{sub.xpEarned} XP</span>
+                  <span className="text-[11px] font-semibold text-[#e8590c]">+{sub.xpEarned} XP</span>
                 </div>
               </div>
             ))}
@@ -138,7 +138,7 @@ export default function ProjectsPage() {
           >
             <div>
               <div className="flex items-center justify-between text-xs">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#0071e3]/10 text-[#0071e3]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#e8590c]/10 text-[#e8590c]">
                   {project.category}
                 </span>
                 <span className="text-[11px] text-[var(--muted)]">{project.difficulty}</span>
@@ -165,7 +165,7 @@ export default function ProjectsPage() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-[var(--line)] flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#0071e3]">+{project.xp} XP</span>
+              <span className="text-xs font-semibold text-[#e8590c]">+{project.xp} XP</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveProject(project)}

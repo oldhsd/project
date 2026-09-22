@@ -92,11 +92,11 @@ export default function AdminAccessPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] text-[#f5f5f7] flex flex-col justify-center items-center px-4 py-12 selection:bg-[#0071e3] selection:text-white">
+    <div className="min-h-screen bg-[#000000] text-[#f5f5f7] flex flex-col justify-center items-center px-4 py-12 selection:bg-[#e8590c] selection:text-white">
       {/* Top Discreet Breadcrumb */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[11px] font-medium tracking-wide text-[#86868b] backdrop-blur-xl">
-          <ShieldCheck className="h-3.5 w-3.5 text-[#2997ff]" />
+          <ShieldCheck className="h-3.5 w-3.5 text-[#ff6b2b]" />
           <span>Restricted Operational Endpoint</span>
         </div>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
@@ -162,7 +162,7 @@ export default function AdminAccessPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@buildnext.local"
-                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#2997ff] focus:bg-white/[0.07]"
+                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#ff6b2b] focus:bg-white/[0.07]"
               />
             </div>
 
@@ -176,14 +176,14 @@ export default function AdminAccessPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#2997ff] focus:bg-white/[0.07]"
+                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#ff6b2b] focus:bg-white/[0.07]"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 h-10 rounded-xl bg-[#0071e3] text-white text-xs font-semibold hover:bg-[#0077ED] transition duration-200 flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+              className="w-full mt-2 h-10 rounded-xl bg-[#e8590c] text-white text-xs font-semibold hover:bg-[#0077ED] transition duration-200 flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
             >
               <Lock className="h-3.5 w-3.5" />
               <span>{loading ? 'Authenticating...' : 'Sign In to Operations'}</span>
@@ -204,7 +204,7 @@ export default function AdminAccessPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Harsh Dixit (Lead Admin)"
-                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#2997ff]"
+                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#ff6b2b]"
               />
             </div>
 
@@ -218,7 +218,7 @@ export default function AdminAccessPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="harsh@buildnext.local"
-                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#2997ff]"
+                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#ff6b2b]"
               />
             </div>
 
@@ -233,12 +233,12 @@ export default function AdminAccessPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#2997ff]"
+                className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder:text-neutral-500 outline-none transition focus:border-[#ff6b2b]"
               />
             </div>
 
-            <div className="rounded-xl border border-[#2997ff]/20 bg-[#0071e3]/10 p-3">
-              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[#2997ff] uppercase tracking-wider mb-1">
+            <div className="rounded-xl border border-[#ff6b2b]/20 bg-[#e8590c]/10 p-3">
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[#ff6b2b] uppercase tracking-wider mb-1">
                 <KeyRound className="h-3.5 w-3.5" />
                 Admin Security Key
               </label>
@@ -248,7 +248,7 @@ export default function AdminAccessPage() {
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
                 placeholder="BUILDNEXT-ADMIN-2026"
-                className="w-full rounded-lg border border-white/[0.15] bg-black/60 px-3 py-1.5 text-xs text-white font-mono placeholder:text-neutral-600 outline-none focus:border-[#2997ff]"
+                className="w-full rounded-lg border border-white/[0.15] bg-black/60 px-3 py-1.5 text-xs text-white font-mono placeholder:text-neutral-600 outline-none focus:border-[#ff6b2b]"
               />
               <p className="mt-1 text-[10px] text-[#86868b]">
                 Key for evaluation demo: <code className="text-white font-mono">BUILDNEXT-ADMIN-2026</code>
@@ -258,7 +258,7 @@ export default function AdminAccessPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 h-10 rounded-xl bg-[#0071e3] text-white text-xs font-semibold hover:bg-[#0077ED] transition duration-200 flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+              className="w-full mt-2 h-10 rounded-xl bg-[#e8590c] text-white text-xs font-semibold hover:bg-[#0077ED] transition duration-200 flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
             >
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>{loading ? 'Registering...' : 'Provision Admin Account'}</span>
