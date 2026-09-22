@@ -1,5 +1,4 @@
 import { auth } from '@/auth';
-export default async function Profile(){const session=await auth();return <><header className="flex items-start justify-between"><div><p className="text-sm font-medium text-[#0071e3]">YOUR PROFILE</p><h1 className="mt-2 text-3xl font-bold">{session?.user?.name}</h1><p className="muted mt-2">Student · BuildNext member</p></div><button className="btn btn-secondary">Edit profile</button></header><section className="mt-8 grid gap-4 md:grid-cols-3"><div className="panel p-5"><p className="text-2xl font-bold">120</p><p className="muted text-sm">XP earned</p></div><div className="panel p-5"><p className="text-2xl font-bold">1</p><p className="muted text-sm">Current level</p></div><div className="panel p-5"><p className="text-2xl font-bold">0</p><p className="muted text-sm">Certificates</p></div></section><section className="panel mt-7 p-6"><h2 className="font-bold">About</h2><p className="muted mt-3">Add a short bio and the skills you are working toward.</p></section></>}
 import { 
   Award, 
   BookOpen, 

@@ -1,5 +1,4 @@
 import { AssessmentRunner } from '@/components/assessment-runner';
-export default function Assessments(){return <div><header className="mb-8"><p className="eyebrow">ASSESS</p><h1 className="mt-2 text-3xl font-black">Practice with proof.</h1><p className="muted mt-2">Short, focused assessments turn learning activity into an actionable skill signal.</p></header><div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]"><AssessmentRunner /><aside className="panel h-fit p-5"><p className="eyebrow">SKILL SIGNALS</p><h2 className="mt-2 text-lg font-black">What this measures</h2><ul className="muted mt-5 space-y-3 text-sm"><li>Layout systems</li><li>Accessibility basics</li><li>Product judgement</li></ul><div className="mt-6 rounded-lg bg-[var(--surface-2)] p-4"><p className="text-xs font-bold">UP NEXT</p><p className="mt-2 text-sm">JavaScript data flows</p></div></aside></div></div>}
 import { Award, Brain, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 
 export default function AssessmentsPage() {

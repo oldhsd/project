@@ -1,4 +1,3 @@
-export default function Certificates(){return <><header><p className="text-sm font-medium text-[#0071e3]">RECOGNITION</p><h1 className="mt-2 text-3xl font-bold">Your certificates.</h1><p className="muted mt-2">Complete a learning path to unlock a verifiable certificate.</p></header><div className="panel mt-8 p-10 text-center"><h2 className="text-lg font-bold">Nothing issued yet</h2><p className="muted mt-2 text-sm">Your completed tracks will appear here.</p></div></>}
 'use client';
 
 import { useState, useEffect } from 'react';
