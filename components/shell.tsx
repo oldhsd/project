@@ -43,11 +43,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)] md:grid md:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b bg-[var(--surface)]/80 px-4 backdrop-blur-2xl md:sticky md:inset-auto md:h-screen md:flex-col md:items-stretch md:border-b-0 md:border-r md:px-3.5 md:py-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full md:w-auto">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#e8590c] text-white font-semibold text-xs shadow-sm">BN</div>
             <span className="font-semibold tracking-tight text-sm text-[var(--ink)]">BuildNext</span>
           </Link>
+          <div className="md:hidden flex items-center gap-1">
+            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 text-[var(--muted)] hover:text-[var(--ink)]">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }} className="p-2 text-[var(--coral)] hover:bg-[var(--coral)]/10 rounded-lg">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <nav className="hidden space-y-0.5 md:mt-6 md:block">
@@ -90,13 +98,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <p className="mt-2 text-[10px] text-[var(--muted)]">320 XP to Developer</p>
           </div>
 
-          <div className="flex items-center gap-1.5 pt-1">
-            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="apple-btn-secondary h-8 flex-1 rounded-lg text-xs" title="Toggle theme">
+          <div className="flex items-center gap-2 pt-1">
+            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="apple-btn-secondary h-9 flex-1 rounded-lg text-xs flex items-center justify-center gap-1.5" title="Toggle theme">
               {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-              <span className="text-[11px]">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+              <span className="text-[11px] font-medium">{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
-            <button onClick={() => signOut({ callbackUrl: '/login' })} className="apple-btn-secondary h-8 w-8 rounded-lg p-0 text-[var(--coral)] hover:bg-[var(--coral)]/10" title="Sign Out">
+            <button onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }} className="apple-btn-secondary h-9 flex-1 rounded-lg text-xs flex items-center justify-center gap-1.5 text-[var(--coral)] hover:bg-[var(--coral)]/10 border-[var(--coral)]/20" title="Sign Out">
               <LogOut className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-medium">Log out</span>
             </button>
           </div>
         </div>
