@@ -5,20 +5,31 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint --ext .ts,.tsx app components lib models",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "tsx --test tests/unit/*.test.ts",
+    "test:e2e": "tsx scripts/run-e2e.ts",
+    "db:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "db:indexes": "tsx scripts/ensure-indexes.ts",
+    "db:migrate": "tsx scripts/migrate-legacy.ts",
+    "format": "prettier --write app components lib models scripts tests"
   },
   "dependencies": {
-    "@auth/mongodb-adapter": "^3.7.0",
     "bcryptjs": "^2.4.3",
-    "framer-motion": "^11.11.17",
     "lucide-react": "^0.468.0",
     "mongoose": "^8.7.0",
-    "next": "^14.2.15",
-    "next-auth": "^5.0.0-beta.25",
+    "next": "15.5.26",
+    "next-auth": "5.0.0-beta.32",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
@@ -27,6 +38,21 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.5.26",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "@playwright/test": "^1.56.0",
+    "@axe-core/playwright": "^4.10.2",
+    "mongodb-memory-server": "^10.3.0"
+  },
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.28"
+    }
   }
 }

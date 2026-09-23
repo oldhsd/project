@@ -1,0 +1,36 @@
+name: BuildNext quality
+on:
+  push:
+    branches: [main, feat/database-admin-foundation]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-fund
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run build
+        env:
+          AUTH_SECRET: build-only-no-database-no-live-credentials-32chars
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-test-evidence
+          path: |
+            playwright-report
+            test-results
+            .qa/screenshots
+          retention-days: 7

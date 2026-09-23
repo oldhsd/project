@@ -3,15 +3,19 @@ services:
     name: buildnext
     runtime: node
     plan: free
-    buildCommand: npm install --no-audit --no-fund && npm run build
-    startCommand: npm run start
+    buildCommand: npm ci --include=dev --no-fund && npm run build
+    startCommand: npm run db:indexes && npm run start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: 20
+        value: 22
       - key: AUTH_SECRET
         generateValue: true
       - key: AUTH_TRUST_HOST
         value: true
+      - key: AUTH_URL
+        sync: false
       - key: MONGODB_URI
         sync: false
+      - key: TRUST_PROXY
+        value: false

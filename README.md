@@ -1,417 +1,140 @@
-# 🚀 BuildNext MVP - Production-Ready Student Learning Platform
+# BuildNext
 
-> A full-stack, production-ready MVP of BuildNext - a multi-disciplinary student learning ecosystem with Apple-style design.
+A database-backed student platform built on the existing Next.js App Router, React, Tailwind CSS, MongoDB/Mongoose and Auth.js codebase. This implementation consolidates the previously separate database and in-memory content stores; it does not introduce another backend service or replace the framework.
 
-## ⚡ Quick Start (5 Minutes)
+**Admin → MongoDB → published website.** There are no automatic demo accounts, seeded courses, fabricated metrics or in-memory content fallbacks. An empty database produces explicit empty states; an unavailable database produces an error, not invented content.
 
-```bash
-# 1. Clone/Setup
-git clone https://github.com/oldhsd/project.git buildnext
-cd buildnext
+## Get running
 
-# 2. Install
-npm install
+Use Node.js 22 LTS (Node 24 is also supported) and a dedicated MongoDB database. Install the exact lockfile:
 
-# 3. Create .env.local (copy from .env.example)
-cp .env.example .env.local
-# Edit .env.local with your MongoDB, Cloudinary, Gmail credentials
+```sh
+npm ci --include=dev
+```
 
-# 4. Run
+Copy `.env.example` to `.env.local`, configure `MONGODB_URI`, a unique random `AUTH_SECRET`, and the exact `AUTH_URL`. To generate a secret locally:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
+```
+
+Then run:
+
+```sh
+npm run db:indexes
 npm run dev
-
-# 5. Open
-# Browser: http://localhost:3000
 ```
 
-## 🎯 Features Included
+Open the origin configured in `AUTH_URL`. Do not switch between `localhost` and `127.0.0.1` while testing authenticated writes: origin validation intentionally distinguishes them.
 
-✅ **Authentication**
-- Email/Password signup & login
-- NextAuth.js v5 with JWT
-- Password hashing with bcryptjs
-- Session management
+### Provision the first administrator
 
-✅ **Dashboard**
-- Personalized welcome message
-- Stats overview (XP, Level, Tracks, Projects)
-- Quick action buttons
-- Dark/Light mode support
+Supply `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` temporarily through your operator environment or secret manager, then run:
 
-✅ **Tracks System**
-- Browse learning tracks
-- Filter by category & difficulty
-- Track details with modules
-- Enrollment tracking
-- Progress monitoring
-
-✅ **Profile Management**
-- View & edit profile
-- Display skills & achievements
-- Certificate showcase
-- Stats (XP, Level, Certificates)
-- Social links (GitHub, LinkedIn)
-
-✅ **Projects**
-- Browse projects by track
-- Submit project with repo & demo link
-- Track submission status
-- Mentor feedback
-
-✅ **Certificates**
-- Issue certificates on completion
-- Unique certificate IDs
-- Printable certificates
-- Verification system
-
-✅ **Events**
-- Browse upcoming events
-- Register for events
-- Track attendance
-- Event history
-
-✅ **Admin Dashboard** (Future)
-- User management
-- Track creation & editing
-- Analytics
-- Submissions review
-
-## 🛠️ Tech Stack
-
-**Frontend:**
-- Next.js 14 (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS
-- Next-Auth.js v5
-
-**Backend:**
-- Next.js API Routes
-- Node.js
-- MongoDB with Mongoose
-
-**Storage:**
-- Cloudinary (Images)
-- AWS S3 Ready
-
-**Authentication:**
-- NextAuth.js v5
-- JWT Tokens
-- bcryptjs for password hashing
-
-**Deployment:**
-- Vercel (Recommended)
-- Docker Ready
-- Serverless Functions
-
-## 📁 Project Structure
-
-```
-buildnext/
-├── app/
-│   ├── (auth)/
-│   │   ├── login/page.tsx
-│   │   └── signup/page.tsx
-│   ├── (dashboard)/
-│   │   ├── dashboard/page.tsx
-│   │   ├── tracks/page.tsx
-│   │   ├── profile/page.tsx
-│   │   ├── projects/page.tsx
-│   │   ├── certificates/page.tsx
-│   │   └── events/page.tsx
-│   ├── api/
-│   │   ├── auth/
-│   │   │   ├── signup/route.ts
-│   │   │   └── [...nextauth]/route.ts
-│   │   ├── tracks/route.ts
-│   │   ├── enrollments/route.ts
-│   │   └── ...other APIs
-│   └── globals.css
-├── lib/
-│   ├── db.ts (MongoDB connection)
-│   ├── auth.ts (NextAuth config)
-│   ├── models.ts (Mongoose schemas)
-│   └── providers.tsx (React providers)
-├── components/ (Reusable components)
-├── types/ (TypeScript interfaces)
-├── public/ (Static assets)
-├── .env.example (Environment template)
-├── package.json
-├── tsconfig.json
-├── tailwind.config.ts
-├── next.config.js
-└── README.md
+```sh
+npm run db:bootstrap
 ```
 
-## 🔧 Environment Variables
+The password must contain at least 12 characters and no more than 72 UTF-8 bytes. There is no default password and no public administrator signup. Existing accounts are not modified unless the operator explicitly uses `npm run db:bootstrap -- --promote-existing`; that command promotes the specified account and replaces its password. Remove the bootstrap environment variables immediately afterwards.
 
-Create `.env.local`:
+Sign in at `/login`, then open `/admin-ops`. `/admin` and `/admin-ops/access` redirect to the canonical admin area. The former `/api/admin/auth` bypass endpoint is deliberately retired with HTTP 410.
 
-```env
-# MongoDB
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/buildnext
+## What the admin controls
 
-# NextAuth
-NEXTAUTH_SECRET=generate-random-32-char-string
-NEXTAUTH_URL=http://localhost:3000
+| Area | Supported operations |
+| --- | --- |
+| Students | Create a student with an initial password; edit profile details; deactivate or reactivate access. No web-based administrator promotion. |
+| Tracks | Create/edit learning paths, categories, prerequisites, difficulty, estimated hours and publication status. |
+| Modules | Add modules to a real track and set their display order. |
+| Lessons | Add lesson text, duration, supporting resource links and order within a real module. |
+| Projects | Maintain briefs, summaries, deliverables and technologies. |
+| Events | Maintain event details, UTC times and capacity; view the actual registration count. |
+| Opportunities | Maintain role details, eligibility, compensation, deadlines and publication/closed status. |
+| Mentors | Maintain profiles and genuine external booking links. No simulated availability or booking confirmations. |
+| Assessments | Create questions, answer choices, correct answers and passing thresholds. Answer keys stay private. |
+| Applications | Review real consented applications and change review status. |
+| Submissions | Review student project URLs and provide status/feedback. |
+| Certificates | Issue credentials to actual students for published tracks; revoke with a reason; inspect public verification. |
+| Website | Edit the home-page heading, introduction and announcement. |
 
-# Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+All collections have searchable, paginated views, validation and explicit save failures. Reference pickers support searches instead of requiring database IDs to be typed. Edit requests carry a record version; conflicting edits fail with HTTP 409 rather than overwriting a newer change.
 
-# Gmail SMTP
-GMAIL_USER=your-email@gmail.com
-GMAIL_PASSWORD=your-gmail-app-password
+### Publication and archiving
 
-# Environment
-NODE_ENV=development
+Create a track, its modules and their lessons, then publish the intended records. Drafts are private. A draft or archived track hides its modules and lessons even when the children are individually marked published. Records and student history are retained when content is archived; there is no destructive cascade deletion.
+
+A saved publication is available on the next website request. Open content views refresh on focus and every 30 seconds while visible. The editing tab refreshes immediately after a successful mutation. There is no rebuild or manual frontend content change required.
+
+Track/module/lesson parent references and certificate recipients cannot be reassigned after creation. Create a new record when its identity or parent changes. This preserves existing student relationships.
+
+## Student workflows
+
+Published catalog pages are public. Signing in is required to enroll, save lesson completion, submit projects, register for events, take assessments, apply for opportunities, view personal certificates or edit a profile.
+
+- Enrollment and lesson completion are idempotent. Progress is calculated from completed lessons in the **currently published curriculum**, not a fabricated percentage or XP balance.
+- Event registration checks capacity and allocates the place in one atomic MongoDB update. Repeated requests by the same student do not consume more places.
+- Applications require explicit profile-sharing consent and are unique per student/opportunity. Closed or expired opportunities reject new applications.
+- Project submissions store an actual URL and notes. Students can update submissions awaiting review or requiring changes, but not accepted work or work already under review.
+- Assessment grading occurs on the server against a versioned answer key. Results are stored as attempts, with idempotency protection for retries. Duration is labelled as suggested; the assessment is not represented as proctored or timed.
+- Credentials use randomly generated 128-bit identifiers. The public registry exposes issuance snapshots and current status, not email addresses or internal student IDs. A revoked credential cannot be reactivated. This is database-backed verification, not a claim of cryptographic signing.
+
+## Security boundaries
+
+Every protected page and API operation rechecks the account's active state and role in MongoDB. A stale JWT or the former demo cookie never grants administrator rights. Private records are scoped to the signed-in user; administrator collections use separate authenticated endpoints.
+
+Mutation endpoints enforce same-origin requests, bounded JSON bodies, strict Zod schemas, normalized email addresses, validated references and HTTP/HTTPS-only links. Password hashes and event attendee IDs are not part of public responses. Login/signup and student writes have database-backed rate limits. Queries escape user search terms rather than accepting database operators.
+
+`AUTH_URL` must match the real HTTPS origin in production. Only enable `AUTH_TRUST_HOST` behind a trusted host/proxy configuration. Only enable `TRUST_PROXY` when the edge overwrites `X-Forwarded-For`; otherwise the application uses a conservative shared signup quota rather than trusting attacker-supplied addresses.
+
+The application sends anti-framing, content-type, referrer and permissions headers, plus a baseline CSP. This CSP deliberately does not claim nonce-based script enforcement. HSTS is enabled when the configured origin is HTTPS. Use the hosting platform's TLS, access logging, request-size limits and secret storage. Rotate `AUTH_SECRET` to invalidate all existing sessions during an authentication incident.
+
+## Data model and API
+
+Canonical models live in `models/index.ts`; validated content schemas live in `lib/content-schema.ts`; persistence and publication logic live in `lib/data-service.ts`. UI-facing configuration is kept separately in `lib/admin-config.ts`.
+
+Main API surfaces:
+
+```text
+GET                 /api/content/{resource}
+GET                 /api/content/{resource}/{id}
+GET, POST           /api/admin/content/{resource}
+GET, PATCH, DELETE  /api/admin/content/{resource}/{id}
+GET                 /api/admin/overview
+GET, PATCH          /api/me
+POST                /api/enrollments
+POST                /api/lessons/{id}/complete
+POST                /api/projects/{id}/submit
+POST                /api/events/{id}/register
+POST                /api/opportunities/{id}/apply
+POST                /api/assessments/{id}/submit
+GET                 /api/content/certificates?id={credentialId}
+GET                 /api/health
 ```
 
-## 📊 Database Schema
+Collection responses contain `items`, `total`, `page`, `pages`, and `limit`. Pagination is bounded to 100 records per request. Public content uses `status=published` enforced by the server, not a client filter. `DELETE` on an archivable admin resource archives/deactivates it and requires `{ "version": <current version> }`. Review and certificate resources use explicit status updates instead.
 
-### Users
-```javascript
-{
-  email, password(hashed), name, avatar, stream, year,
-  interests[], bio, role, xp, level, badges[], github, linkedin
-}
-```
+Existing `/api/tracks`, `/api/opportunities`, and compatible `/api/content/*` write paths delegate to the same service and authorization checks. There is no alternate unprotected write path.
 
-### Tracks
-```javascript
-{
-  name, description, category, difficulty, icon,
-  modules[], estimatedHours
-}
-```
+## Checks
 
-### Modules
-```javascript
-{
-  trackId, title, description, order, videoUrl,
-  resources[], duration
-}
-```
-
-### Enrollments
-```javascript
-{
-  userId, trackId, enrolledAt, progress%, status,
-  completedModules[]
-}
-```
-
-### Projects, Submissions, Certificates, Events
-(See `lib/models.ts` for complete schemas)
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-```bash
-# 1. Push to GitHub
-git add .
-git commit -m "BuildNext MVP"
-git push origin main
-
-# 2. Go to vercel.com
-# 3. Import from GitHub
-# 4. Add environment variables
-# 5. Deploy!
-```
-
-### Docker
-
-```bash
-# Build
-docker build -t buildnext .
-
-# Run
-docker run -p 3000:3000 buildnext
-```
-
-### Self-Hosted
-
-```bash
-npm run build
-npm start
-```
-
-## 📈 Performance
-
-- ✅ Lighthouse Score: 90+
-- ✅ Page Load: <1.5s
-- ✅ Mobile Optimized
-- ✅ Dark Mode Support
-- ✅ Image Optimization
-- ✅ Code Splitting
-- ✅ API Caching Ready
-
-## 🔐 Security
-
-- ✅ Password Hashing (bcryptjs)
-- ✅ JWT Tokens
-- ✅ CORS Configured
-- ✅ Input Validation
-- ✅ SQL Injection Protection
-- ✅ XSS Prevention
-- ✅ Rate Limiting Ready
-- ✅ HTTPS Enforced (Vercel)
-
-## 🎨 Design System
-
-**Colors:**
-- Primary: `#0071e3` (Apple Blue)
-- Gray Scale: 1-5 variants
-- Dark Mode: Full support
-
-**Typography:**
-- Font: System fonts (-apple-system, SF Pro Display)
-- H1: 32px, bold
-- H2: 28px, bold
-- Body: 16px, regular
-
-**Spacing:**
-- 4px, 8px, 12px, 16px, 24px, 32px, 48px
-
-**Border Radius:**
-- Inputs/Buttons: 6px
-- Cards: 8px
-- Large: 12px
-
-## 📱 Responsive Design
-
-- ✅ Mobile: 375px
-- ✅ Tablet: 768px
-- ✅ Desktop: 1440px
-- ✅ Ultra-wide: 2560px
-
-## 🧪 Testing
-
-```bash
-# Run linter
+```sh
+npm run typecheck
 npm run lint
-
-# Check types
-npm run type-check
-
-# Format code
-npm run format
-```
-
-## 🔄 Git Workflow
-
-```bash
-# Feature branch
-git checkout -b feature/new-feature
-git add .
-git commit -m "Feature: description"
-git push origin feature/new-feature
-# Create Pull Request on GitHub
-
-# Main branch (auto-deploys on Vercel)
-git checkout main
-git pull
-git merge feature/new-feature
-git push origin main
-```
-
-## 📚 API Documentation
-
-### Authentication
-- `POST /api/auth/signup` - Create account
-- `POST /api/auth/[...nextauth]` - NextAuth routes
-
-### Tracks
-- `GET /api/tracks` - List tracks
-- `GET /api/tracks/:id` - Get track details
-- `POST /api/tracks` - Create track (admin)
-
-### Enrollments
-- `POST /api/enrollments` - Enroll in track
-- `GET /api/enrollments/:userId` - Get enrollments
-
-### More APIs
-(See `app/api/` directory for complete routes)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing`
-3. Commit changes: `git commit -m "Add amazing feature"`
-4. Push to branch: `git push origin feature/amazing`
-5. Open Pull Request
-
-## 📝 License
-
-MIT License - see LICENSE file
-
-## 🆘 Support
-
-- GitHub Issues: Report bugs
-- Discussions: Ask questions
-- Email: support@buildnext.com
-
-## 🎯 Roadmap
-
-- [ ] AI Mentor chatbot
-- [ ] Mentor assignment system
-- [ ] Leaderboards
-- [ ] Team builder
-- [ ] Advanced analytics
-- [ ] Mobile app
-- [ ] Payment integration
-- [ ] Partner integrations
-
-## 👨‍💻 Development
-
-```bash
-# Install dependencies
-npm install
-
-# Create .env.local
-cp .env.example .env.local
-
-# Start dev server
-npm run dev
-
-# Open browser
-# http://localhost:3000
-
-# Test signup/login
-# Email: test@buildnext.com
-# Password: Test@123
-```
-
-## 🚀 Build for Production
-
-```bash
+npm run test:unit
 npm run build
-npm run start
+npx playwright install chromium
+npm run test:e2e
+npm audit --omit=dev
 ```
 
-## 📊 Key Metrics
+`test:e2e` starts a **real temporary MongoDB process** and the production Next.js server, provisions generated test-only accounts, exercises the interfaces and APIs, restarts the application to check persistence, and then deletes the temporary database. It never uses the deployment URI. Temporary acceptance fixtures are restricted to the test harness; normal application startup seeds nothing.
 
-- **Users**: Scalable to 100k+
-- **Database**: 500MB → Upgrade as needed
-- **Requests**: Unlimited on Vercel
-- **Storage**: Cloudinary free tier included
-- **Deployment**: Automatic on GitHub push
+Playwright captures desktop/mobile screenshots for the public, student and admin route inventory, checks page errors, horizontal overflow and serious/critical accessibility violations, and writes an HTML report. `.qa/`, `test-results/` and `playwright-report/` are excluded from Git. Screenshots are test evidence, not real customer data. Manual visual review findings are recorded separately in `docs/VERIFICATION.md`.
 
-## 🎉 You're Ready!
+## Upgrading an existing installation
 
-BuildNext MVP is production-ready and can be deployed immediately.
+Read [DEPLOYMENT.md](DEPLOYMENT.md) before switching a live instance. Back up the existing database, run the migration dry run, review legacy fields and duplicates, apply deliberately, create indexes, and bootstrap a trusted administrator. Missing publication statuses become **draft**, never automatically public.
 
-**Next Steps:**
-1. Add your credentials to `.env.local`
-2. Run `npm install && npm run dev`
-3. Test at `http://localhost:3000`
-4. Push to GitHub
-5. Deploy to Vercel
-6. Share with the world!
+The old in-memory store was not persistent. Content that only existed in that process cannot be reconstructed from MongoDB. Import verified source material through the admin controls instead of generating replacement content.
 
----
-
-**Built with ❤️ for the BuildNext community**
-
-*Last Updated: 2024*
+Next.js is pinned to the supported 15.x maintenance line to avoid a framework rebuild. The existing Auth.js credentials integration is retained and pinned. A targeted PostCSS override removes vulnerable nested versions while keeping the supported Next.js major. Keep the lockfile under review and run the audit in CI when dependencies change.

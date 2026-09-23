@@ -1,2 +1,12 @@
-import { NextResponse } from 'next/server'; import { connectDB } from '@/lib/mongodb';
-export async function GET() { try { await connectDB(); return NextResponse.json({ status: 'ok' }); } catch { return NextResponse.json({ status: 'unavailable' }, { status: 503 }); } }
+import { connectDB } from '@/lib/mongodb';
+import { json } from '@/lib/http';
+export const dynamic = 'force-dynamic';
+export async function GET() {
+  try {
+    const connection = await connectDB();
+    await connection.connection.db!.admin().ping();
+    return json({ status: 'ok' });
+  } catch {
+    return json({ status: 'unavailable' }, 503);
+  }
+}

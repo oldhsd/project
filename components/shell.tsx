@@ -1,136 +1,307 @@
 'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import {
-  Award,
   BookOpen,
   BriefcaseBusiness,
   CalendarDays,
-  CheckCircle2,
-  Code2,
-  Compass,
+  CheckSquare,
+  FolderOpen,
+  GraduationCap,
   LayoutDashboard,
-  LogOut,
+  Menu,
   Moon,
-  Sparkles,
+  ShieldCheck,
   Sun,
   UserRound,
-  UsersRound
+  Users,
+  ArrowUpRight,
+  LogOut,
 } from 'lucide-react';
-
-const navItems = [
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+import { adminConfig, adminSections } from '@/lib/admin-config';
+export type ShellUser = { name: string; role: string } | null;
+const navigation = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/tracks', label: 'Learn', icon: BookOpen },
-  { href: '/assessments', label: 'Assess', icon: CheckCircle2 },
-  { href: '/projects', label: 'Build', icon: Code2 },
-  { href: '/events', label: 'Compete', icon: CalendarDays },
+  { href: '/tracks', label: 'Learning tracks', icon: BookOpen },
+  { href: '/projects', label: 'Projects', icon: FolderOpen },
+  { href: '/assessments', label: 'Assessments', icon: CheckSquare },
+  { href: '/events', label: 'Events', icon: CalendarDays },
   { href: '/opportunities', label: 'Opportunities', icon: BriefcaseBusiness },
-  { href: '/mentorship', label: 'Mentorship', icon: UsersRound },
-  { href: '/certificates', label: 'Certificates', icon: Award },
-  { href: '/profile', label: 'Profile', icon: UserRound }
-] as const;
-
-export function Shell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const { data } = useSession();
-  const { theme, setTheme } = useTheme();
-  const admin = (data?.user as { role?: string } | undefined)?.role === 'admin';
-
+  { href: '/mentorship', label: 'Mentorship', icon: Users },
+  { href: '/certificates', label: 'My certificates', icon: GraduationCap },
+  { href: '/profile', label: 'My profile', icon: UserRound },
+];
+export function Brand() {
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)] md:grid md:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b bg-[var(--surface)]/80 px-4 backdrop-blur-2xl md:sticky md:inset-auto md:h-screen md:flex-col md:items-stretch md:border-b-0 md:border-r md:px-3.5 md:py-6">
-        <div className="flex items-center justify-between w-full md:w-auto">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-[#e8590c] text-white font-semibold text-xs shadow-sm">BN</div>
-            <span className="font-semibold tracking-tight text-sm text-[var(--ink)]">BuildNext</span>
-          </Link>
-          <div className="md:hidden flex items-center gap-1">
-            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 text-[var(--muted)] hover:text-[var(--ink)]">
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <button onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }} className="p-2 text-[var(--coral)] hover:bg-[var(--coral)]/10 rounded-lg">
-              <LogOut className="h-4 w-4" />
-            </button>
+    <Link href="/" className="inline-flex items-center gap-2.5 font-semibold tracking-tight">
+      <span
+        aria-hidden="true"
+        className="grid size-8 place-items-center rounded-md bg-orange-700 text-xs font-bold text-white"
+      >
+        BN
+      </span>
+      <span>BuildNext</span>
+    </Link>
+  );
+}
+export function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const dark = mounted && resolvedTheme === 'dark';
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+      onClick={() => setTheme(dark ? 'light' : 'dark')}
+    >
+      {dark ? <Sun /> : <Moon />}
+    </Button>
+  );
+}
+export function PublicHeader() {
+  const [open, setOpen] = useState(false);
+  const links = [
+    ['/tracks', 'Tracks'],
+    ['/projects', 'Projects'],
+    ['/events', 'Events'],
+    ['/opportunities', 'Opportunities'],
+    ['/verify', 'Verify a certificate'],
+  ];
+  return (
+    <>
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <header className="border-b bg-card">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Brand />
+          <nav
+            aria-label="Main navigation"
+            className="hidden gap-6 text-sm text-muted-foreground lg:flex"
+          >
+            {links.map(([href, label]) => (
+              <Link key={href} href={href} className="hover:text-foreground">
+                {label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
+            <Button variant="ghost" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button asChild className="hidden sm:inline-flex">
+              <Link href="/signup">Join BuildNext</Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="lg:hidden"
+              aria-label="Open navigation"
+              onClick={() => setOpen(true)}
+            >
+              <Menu />
+            </Button>
           </div>
         </div>
-
-        <nav className="hidden space-y-0.5 md:mt-6 md:block">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors duration-150 ${
-                  isActive ? 'text-[var(--ink)] bg-[var(--surface-2)] font-semibold' : 'text-[var(--muted)] hover:bg-[var(--surface-2)]/60 hover:text-[var(--ink)]'
-                }`}
-              >
-                {isActive && (
-                  <motion.span layoutId="active-pill" className="absolute inset-0 rounded-lg bg-[var(--surface-2)]" transition={{ type: 'spring', stiffness: 350, damping: 30 }} />
-                )}
-                <Icon className={`relative h-4 w-4 shrink-0 ${isActive ? 'text-[#e8590c]' : 'text-[var(--muted)]'}`} />
-                <span className="relative">{label}</span>
-              </Link>
-            );
-          })}
-
-          {admin && (
-            <Link href="/admin" className={`relative mt-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${pathname.startsWith('/admin') ? 'bg-[var(--coral)] text-[#30110b]' : 'text-[var(--coral)] hover:bg-[color-mix(in_srgb,var(--coral)_12%,transparent)]'}`}>
-              <Sparkles className="h-4 w-4" />
-              Admin studio
+      </header>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Navigation"
+        description="Explore BuildNext."
+      >
+        <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
+          {links.map(([href, label]) => (
+            <Link
+              className="rounded-md px-3 py-3 hover:bg-accent"
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+            >
+              {label}
             </Link>
-          )}
+          ))}
+          <Link
+            className="rounded-md px-3 py-3 hover:bg-accent"
+            href="/signup"
+            onClick={() => setOpen(false)}
+          >
+            Join BuildNext
+          </Link>
         </nav>
-
-        <div className="hidden space-y-3 md:mt-auto md:block">
-          <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-[var(--ink)]">Level 2 · Builder</span>
-              <span className="text-[10px] font-medium text-[#e8590c]">680 XP</span>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--line)]">
-              <div className="h-full w-[68%] rounded-full bg-[#e8590c] transition-all duration-500" />
-            </div>
-            <p className="mt-2 text-[10px] text-[var(--muted)]">320 XP to Developer</p>
+      </Dialog>
+    </>
+  );
+}
+export function Shell({
+  children,
+  user,
+  admin = false,
+}: {
+  children: React.ReactNode;
+  user: ShellUser;
+  admin?: boolean;
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const navClass = (href: string) =>
+    cn(
+      'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+      (pathname === href || (href !== '/admin-ops' && pathname.startsWith(href + '/'))) &&
+        'bg-accent font-medium text-accent-foreground'
+    );
+  function Nav() {
+    return (
+      <nav aria-label={admin ? 'Administration' : 'Platform navigation'} className="space-y-1">
+        {admin ? (
+          <>
+            <Link
+              href="/admin-ops"
+              className={navClass('/admin-ops')}
+              onClick={() => setOpen(false)}
+              aria-current={pathname === '/admin-ops' ? 'page' : undefined}
+            >
+              <LayoutDashboard className="size-4" />
+              Overview
+            </Link>
+            {adminSections.map((section) => (
+              <div key={section.label} className="pt-4">
+                <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {section.label}
+                </p>
+                {section.resources.map((key) => {
+                  const href = `/admin-ops/${key}`;
+                  return (
+                    <Link
+                      key={key}
+                      href={href}
+                      className={navClass(href)}
+                      onClick={() => setOpen(false)}
+                      aria-current={pathname === href ? 'page' : undefined}
+                    >
+                      {adminConfig[key].label}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+          </>
+        ) : (
+          navigation.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={navClass(href)}
+              onClick={() => setOpen(false)}
+              aria-current={pathname === href ? 'page' : undefined}
+            >
+              <Icon className="size-4" />
+              {label}
+            </Link>
+          ))
+        )}
+        {!admin && user?.role === 'admin' && (
+          <div className="pt-4">
+            <Link
+              href="/admin-ops"
+              className={navClass('/admin-ops')}
+              onClick={() => setOpen(false)}
+            >
+              <ShieldCheck className="size-4" />
+              Administration
+            </Link>
           </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="apple-btn-secondary h-9 flex-1 rounded-lg text-xs flex items-center justify-center gap-1.5" title="Toggle theme">
-              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-              <span className="text-[11px] font-medium">{theme === 'dark' ? 'Light' : 'Dark'}</span>
-            </button>
-            <button onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }} className="apple-btn-secondary h-9 flex-1 rounded-lg text-xs flex items-center justify-center gap-1.5 text-[var(--coral)] hover:bg-[var(--coral)]/10 border-[var(--coral)]/20" title="Sign Out">
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="text-[11px] font-medium">Log out</span>
-            </button>
-          </div>
+        )}
+      </nav>
+    );
+  }
+  return (
+    <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <aside className="sticky top-0 hidden h-screen flex-col border-r bg-card lg:flex">
+        <div className="border-b px-6 py-5">
+          <Brand />
+          <p className="mt-2 text-xs text-muted-foreground">
+            {admin ? 'Administration' : 'Student platform'}
+          </p>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3">
+          <Nav />
+        </div>
+        <div className="border-t p-4">
+          <Link
+            href={admin ? '/dashboard' : '/verify'}
+            className="flex items-center justify-between text-sm text-muted-foreground hover:text-foreground"
+          >
+            {admin ? 'View student platform' : 'Verify a certificate'}
+            <ArrowUpRight className="size-4" />
+          </Link>
         </div>
       </aside>
-
-      <main className="min-w-0 px-4 pb-24 pt-20 md:px-8 md:pb-12 md:pt-8">
-        <AnimatePresence mode="wait">
-          <motion.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: 'easeOut' }}>
-            {children}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      <nav className="fixed bottom-3 inset-x-3 z-30 flex items-center justify-around rounded-2xl border border-[var(--line)] bg-[var(--surface)]/90 p-1.5 shadow-lg backdrop-blur-2xl md:hidden">
-        {navItems.slice(0, 5).map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-          return (
-            <Link key={href} href={href} className={`flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition ${isActive ? 'text-[#e8590c] font-semibold' : 'text-[var(--muted)]'}`}>
-              <Icon className="h-4 w-4" />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="min-w-0">
+        <header className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b bg-card px-4 py-3 sm:px-8">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Open navigation"
+              className="lg:hidden"
+              onClick={() => setOpen(true)}
+            >
+              <Menu />
+            </Button>
+            <p className="text-sm font-medium">
+              <span className="sm:hidden">{admin ? 'Admin' : 'BuildNext'}</span>
+              <span className="hidden sm:inline">
+                {admin ? 'Admin workspace' : 'Learn. Build. Progress.'}
+              </span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {user ? (
+              <>
+                <span className="hidden max-w-48 truncate text-sm text-muted-foreground sm:block">
+                  {user.name}
+                </span>
+                <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/' })}>
+                  <LogOut />
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Button asChild variant="outline">
+                <Link href="/login">Sign in</Link>
+              </Button>
+            )}
+          </div>
+        </header>
+        <main
+          id="main-content"
+          className="mx-auto min-w-0 w-full max-w-7xl px-4 py-8 sm:px-8 sm:py-10"
+        >
+          {children}
+        </main>
+      </div>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title={admin ? 'Administration' : 'BuildNext'}
+        description="Choose a section of the platform."
+      >
+        <Nav />
+      </Dialog>
     </div>
   );
 }
-
