@@ -21,6 +21,8 @@ Local execution used Node 24.14.0, npm 11.6.2, Next.js 15.5.26, Playwright Chrom
 
 The final local browser run also verifies that every admin editor's save button is below its form fields, not positioned over them.
 
+GitHub Actions independently passed the full Node 22/Linux quality workflow for implementation commit `be1721faae6bd3774d65cf5f4f35d6c67b982401`: pull-request run [35846852055](https://github.com/oldhsd/project/actions/runs/35846852055) and push run [35846851906](https://github.com/oldhsd/project/actions/runs/35846851906). The checked steps include clean installation, lint, types, unit tests, production dependency audit, production build, Chromium installation, end-to-end tests and evidence upload. The manual-review documentation is a subsequent documentation-only update.
+
 ### Browser coverage
 
 The acceptance suite exercises real administrator sign-in and UI creation of tracks, modules, lessons, projects, events, opportunities, mentors, assessments, students, website settings and certificates. It checks draft visibility, parent publication rules, Unicode preservation, escaped lesson text, private answer keys, consent, actual student actions and actual review results.
@@ -33,7 +35,11 @@ These are Chromium viewport checks, not a claim of cross-browser certification, 
 
 ## Manual visual review
 
-Status: final screenshot review is in progress. This section will be updated before the pull request is marked ready for review.
+Completed the manual visual examination of the finalized public, student and administration interfaces using their rendered browser screenshots in a native desktop browser. The review covered the complete route inventory at desktop and mobile widths, all 13 admin editors (including long-form top and bottom states), navigation overlays, a representative dark-theme overview, populated and empty catalogs, sign-in/sign-up, learning progress, project feedback, applications, event registrations, assessment questions/results, and active/revoked/missing certificate records. A simulated API 503 panel and the actual 404 page were also examined at both widths.
+
+The final capture set contains 159 source screenshots, organized into 103 full-content review sheets. All 103 sheets were examined. Long pages were split into consecutive overlapping sections; duplicate initial filled-form captures were not individually repeated when the finalized editor captures covered the same interface. This is a manual visual review of rendered states, distinct from the automated browser assertions.
+
+After the corrections below, no blocking clipping, control overlap, document overflow or navigation-layout defect was observed in the reviewed final states. The review is not a claim of flawless typography, every possible data combination, every browser, or every device.
 
 Issues already found and corrected during verification:
 
