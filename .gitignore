@@ -38,3 +38,10 @@ yarn-error.log*
 
 # OS
 Thumbs.db
+
+# Local QA and reproducible test outputs
+.qa/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*-audit.json

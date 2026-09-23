@@ -1,26 +1,24 @@
-import { AuthForm } from '@/components/auth-form'; import Link from 'next/link';
-
-
+import { AuthForm } from '@/components/auth-form';
+import { Brand, ThemeToggle } from '@/components/shell';
+import { Card } from '@/components/ui/primitives';
+export const metadata = { title: 'Create an account' };
 export default function SignupPage() {
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--ink)] flex flex-col justify-center items-center px-4 py-12">
-      <div className="w-full max-w-md apple-panel p-8 rounded-2xl shadow-xl space-y-6">
-        <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#e8590c] text-white font-bold text-xs">
-              BN
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--ink)]">
-            Create Student Account
-          </h1>
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            Stream-agnostic learning, project proofs, and partner pathways.
-          </p>
-        </div>
-
-        <AuthForm signup />
+    <main
+      id="main-content"
+      className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12"
+    >
+      <div className="mb-8 flex items-center justify-between">
+        <Brand />
+        <ThemeToggle />
       </div>
+      <Card className="p-6 sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Join BuildNext</h1>
+        <p className="mb-7 mt-2 text-sm leading-6 text-muted-foreground">
+          Create your student account to save progress, submit projects and apply for opportunities.
+        </p>
+        <AuthForm signup />
+      </Card>
     </main>
   );
 }

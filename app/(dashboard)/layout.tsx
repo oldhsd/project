@@ -1,2 +1,11 @@
-import { auth } from '@/auth'; import { redirect } from 'next/navigation'; import { Shell } from '@/components/shell';
-export default async function DashboardLayout({children}:{children:React.ReactNode}){if(!(await auth()))redirect('/login');return <Shell>{children}</Shell>}
+import { currentUser } from '@/lib/access';
+import { Shell } from '@/components/shell';
+export const dynamic = 'force-dynamic';
+export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
+  const user = await currentUser();
+  return (
+    <Shell user={user ? { name: String(user.name), role: String(user.role) } : null}>
+      {children}
+    </Shell>
+  );
+}
