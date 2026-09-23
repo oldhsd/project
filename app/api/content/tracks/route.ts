@@ -1,48 +1,62 @@
 import { NextResponse } from 'next/server';
-import { DataStore, Track } from '@/lib/data-service';
+import { requireAdmin } from '@/lib/access';
+import { connectDB } from '@/lib/mongodb';
+import Track from '@/models/Track';
 
 export async function GET() {
-  const tracks = DataStore.getTracks();
-  return NextResponse.json({ success: true, tracks });
+  try {
+    await connectDB();
+    const tracks = await Track.find().sort({ createdAt: -1 }).lean();
+    const mapped = (tracks as any[]).map(t => ({
+      id:            t._id.toString(),
+      name:          t.name,
+      category:      t.category,
+      difficulty:    t.difficulty,
+      estimatedHours:t.estimatedHours,
+      modulesCount:  t.modulesCount || t.modules?.length || 0,
+      description:   t.description,
+    }));
+    return NextResponse.json({ success: true, tracks: mapped });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
+  if (!await requireAdmin())
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   try {
+    await connectDB();
     const body = await req.json();
-    if (!body.name || !body.category) {
-      return NextResponse.json({ error: 'Name and Category are required' }, { status: 400 });
-    }
-    const newTrack: Track = {
-      id: body.id || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      name: body.name,
-      description: body.description || '',
-      category: body.category,
-      difficulty: body.difficulty || 'Beginner',
-      icon: body.icon || 'Layers',
-      estimatedHours: Number(body.estimatedHours) || 20,
-      modulesCount: Number(body.modulesCount) || 4,
-      featured: Boolean(body.featured),
-      syllabus: body.syllabus || [
-        { id: 'm1', title: 'Core Foundations & Mental Model', duration: '3 hrs', xp: 40, lessons: ['Introduction', 'Core Architecture'] }
-      ],
-      prerequisites: body.prerequisites || ['Basic computer literacy']
-    };
-    DataStore.addTrack(newTrack);
-    return NextResponse.json({ success: true, track: newTrack }, { status: 201 });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    if (!body.name || !body.category)
+      return NextResponse.json({ error: 'Name and Category required' }, { status: 400 });
+    const track = await Track.create({
+      name:          body.name,
+      category:      body.category,
+      difficulty:    body.difficulty    || 'Intermediate',
+      estimatedHours:Number(body.estimatedHours) || 40,
+      modulesCount:  Number(body.modulesCount)   || 8,
+      description:   body.description  || '',
+      prerequisites: Array.isArray(body.prerequisites) ? body.prerequisites : [],
+      icon:          'BookOpen',
+      modules:       [],
+    });
+    return NextResponse.json({ success: true, track }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
+  if (!await requireAdmin())
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    DataStore.deleteTrack(id);
+    await connectDB();
+    const id = new URL(req.url).searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    await Track.findByIdAndDelete(id);
     return NextResponse.json({ success: true });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-

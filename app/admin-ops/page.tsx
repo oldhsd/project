@@ -1,1050 +1,461 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { 
-  BarChart3, 
-  BookOpen, 
-  BriefcaseBusiness, 
-  CalendarDays, 
-  CheckCircle2, 
-  Clock, 
-  ExternalLink, 
-  Filter, 
-  Layers, 
-  LogOut, 
-  Plus, 
-  Search, 
-  ShieldCheck, 
-  Sparkles, 
-  Trash2, 
-  UserCheck, 
-  Users, 
-  Award, 
-  AlertCircle,
-  Eye,
-  Check
+import {
+  BarChart3, BookOpen, BriefcaseBusiness, Users, LogOut,
+  Menu, Shield, Trash2, Plus, Search, CheckCircle2,
+  AlertCircle, Activity, RefreshCw, X
 } from 'lucide-react';
-import { Track, Opportunity, Application, EventItem, Certificate } from '@/lib/data-service';
 
-export default function AdminOpsStudio() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'tracks' | 'opportunities' | 'applications' | 'events' | 'certificates'>('overview');
-  
-  // Data states
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+/* ── Types ── */
+interface Analytics { students: number; tracks: number; opportunities: number }
+interface TrackItem  { id: string; name: string; category: string; difficulty: string; estimatedHours: number; modulesCount: number; description: string }
+interface OppItem    { id: string; title: string; company: string; type: string; mode: string; location: string; stipend: string; deadline: string; status: string }
+interface Toast      { id: string; message: string; type: 'success'|'error'|'info' }
 
-  // Forms / Modals
-  const [showTrackModal, setShowTrackModal] = useState(false);
-  const [showOppModal, setShowOppModal] = useState(false);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [showCertModal, setShowCertModal] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
-
-  // Track Form
-  const [trackForm, setTrackForm] = useState({
-    name: '',
-    category: 'Technology',
-    difficulty: 'Intermediate',
-    estimatedHours: 24,
-    modulesCount: 6,
-    description: '',
-    prerequisites: 'Basic programming'
-  });
-
-  // Opportunity Form
-  const [oppForm, setOppForm] = useState({
-    title: '',
-    company: '',
-    type: 'Internship',
-    mode: 'Hybrid',
-    location: 'Remote / Hybrid',
-    stipend: '₹25,000 / month',
-    description: '',
-    skills: '',
-    eligibility: 'Open to pre-final and final year students',
-    deadline: '2026-11-15'
-  });
-
-  // Event Form
-  const [eventForm, setEventForm] = useState({
-    title: '',
-    organizer: 'BuildNext Community',
-    type: 'Workshop',
-    date: '2026-10-15',
-    time: '06:00 PM IST',
-    mode: 'Online',
-    spotsTotal: 300,
-    description: '',
-    perks: 'Official Certificate\nLive Q&A'
-  });
-
-  // Certificate Form
-  const [certForm, setCertForm] = useState({
-    studentName: '',
-    studentEmail: '',
-    trackName: 'Full Stack Engineering & Cloud Systems',
-    category: 'Technology',
-    grade: 'Distinction'
-  });
-
-  // Fetch live platform data
-  const fetchData = async () => {
-    try {
-      const [tRes, oRes, aRes, eRes, cRes, anRes] = await Promise.all([
-        fetch('/api/content/tracks').then(r => r.json()),
-        fetch('/api/content/opportunities').then(r => r.json()),
-        fetch('/api/content/applications').then(r => r.json()),
-        fetch('/api/content/events').then(r => r.json()),
-        fetch('/api/content/certificates').then(r => r.json()),
-        fetch('/api/content/analytics').then(r => r.json())
-      ]);
-
-      if (tRes.tracks) setTracks(tRes.tracks);
-      if (oRes.opportunities) setOpportunities(oRes.opportunities);
-      if (aRes.applications) setApplications(aRes.applications);
-      if (eRes.events) setEvents(eRes.events);
-      if (cRes.certificates) setCertificates(cRes.certificates);
-      if (anRes.analytics) setAnalytics(anRes.analytics);
-    } catch (err) {
-      console.error('Failed to load operations data', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleAdminLogout = async () => {
-    await fetch('/api/admin/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'logout' })
-    });
-    router.push('/admin-ops/access');
-  };
-
-  // Actions
-  const handleCreateTrack = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch('/api/content/tracks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...trackForm,
-        prerequisites: trackForm.prerequisites.split(',').map(s => s.trim())
-      })
-    });
-    if (res.ok) {
-      setStatusMessage('Track created and published to students.');
-      setShowTrackModal(false);
-      setTrackForm({ name: '', category: 'Technology', difficulty: 'Intermediate', estimatedHours: 24, modulesCount: 6, description: '', prerequisites: 'Basic programming' });
-      fetchData();
-      setTimeout(() => setStatusMessage(''), 3500);
-    }
-  };
-
-  const handleDeleteTrack = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this learning track?')) return;
-    await fetch(`/api/content/tracks?id=${id}`, { method: 'DELETE' });
-    fetchData();
-  };
-
-  const handleCreateOpportunity = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch('/api/content/opportunities', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...oppForm,
-        skills: oppForm.skills.split(',').map(s => s.trim()),
-        status: 'published'
-      })
-    });
-    if (res.ok) {
-      setStatusMessage('Opportunity published live to students.');
-      setShowOppModal(false);
-      setOppForm({ title: '', company: '', type: 'Internship', mode: 'Hybrid', location: 'Remote / Hybrid', stipend: '₹25,000 / month', description: '', skills: '', eligibility: 'Open to all students', deadline: '2026-11-15' });
-      fetchData();
-      setTimeout(() => setStatusMessage(''), 3500);
-    }
-  };
-
-  const handleDeleteOpportunity = async (id: string) => {
-    if (!confirm('Delete this opportunity?')) return;
-    await fetch(`/api/content/opportunities?id=${id}`, { method: 'DELETE' });
-    fetchData();
-  };
-
-  const handleUpdateAppStatus = async (id: string, status: Application['status']) => {
-    await fetch('/api/content/applications', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status })
-    });
-    fetchData();
-  };
-
-  const handleCreateEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch('/api/content/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventForm)
-    });
-    if (res.ok) {
-      setStatusMessage('Event published.');
-      setShowEventModal(false);
-      fetchData();
-      setTimeout(() => setStatusMessage(''), 3500);
-    }
-  };
-
-  const handleIssueCertificate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch('/api/content/certificates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(certForm)
-    });
-    if (res.ok) {
-      setStatusMessage('Verifiable Certificate issued with unique ID.');
-      setShowCertModal(false);
-      setCertForm({ studentName: '', studentEmail: '', trackName: 'Full Stack Engineering & Cloud Systems', category: 'Technology', grade: 'Distinction' });
-      fetchData();
-      setTimeout(() => setStatusMessage(''), 3500);
-    }
-  };
-
+/* ── Toast ── */
+function Toasts({ list }: { list: Toast[] }) {
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] selection:bg-[#e8590c] selection:text-white">
-      {/* Top Operations Header */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#09090b]/80 backdrop-blur-2xl px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#e8590c] text-white font-bold text-xs shadow-md">
-            OPS
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold tracking-tight text-white">
-                BuildNext Operations Studio
-              </h1>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Live Admin Mode
-              </span>
-            </div>
-            <p className="text-[11px] text-[#86868b]">
-              Curriculum, Partner Pipeline & Student Content Control
-            </p>
-          </div>
+    <div className="fixed top-5 right-5 z-[200] flex flex-col gap-2 pointer-events-none">
+      {list.map(t => (
+        <div key={t.id} className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium shadow-2xl border backdrop-blur-xl pointer-events-auto animate-in slide-in-from-right-4 duration-200
+          ${t.type==='success'?'bg-emerald-950/95 border-emerald-500/30 text-emerald-300':t.type==='error'?'bg-red-950/95 border-red-500/30 text-red-300':'bg-blue-950/95 border-blue-500/30 text-blue-300'}`}>
+          {t.type==='success'&&<CheckCircle2 size={15}/>}{t.type==='error'&&<AlertCircle size={15}/>}{t.type==='info'&&<Activity size={15}/>}
+          {t.message}
         </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            target="_blank"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] text-xs font-medium text-[#86868b] hover:text-white hover:bg-white/[0.08] transition"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            <span>Preview Student Portal</span>
-            <ExternalLink className="h-3 w-3 opacity-60" />
-          </Link>
-          <button
-            onClick={handleAdminLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-xs font-medium text-red-400 hover:bg-red-500/20 transition"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            <span>Exit Admin</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Navigation Sub-bar */}
-      <div className="border-b border-white/[0.06] bg-[#0f0f13] px-6">
-        <div className="flex gap-1 overflow-x-auto py-2 scrollbar-none">
-          {[
-            { key: 'overview', label: 'Overview & Signals', icon: BarChart3 },
-            { key: 'tracks', label: `Tracks (${tracks.length})`, icon: BookOpen },
-            { key: 'opportunities', label: `Opportunities (${opportunities.length})`, icon: BriefcaseBusiness },
-            { key: 'applications', label: `Applications (${applications.length})`, icon: UserCheck },
-            { key: 'events', label: `Events (${events.length})`, icon: CalendarDays },
-            { key: 'certificates', label: `Certificates (${certificates.length})`, icon: Award }
-          ].map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key as any)}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-medium whitespace-nowrap transition ${
-                activeTab === key
-                  ? 'bg-white/[0.12] text-white font-semibold shadow-sm'
-                  : 'text-[#86868b] hover:text-white hover:bg-white/[0.04]'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Status Alert Banner */}
-      {statusMessage && (
-        <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-300 animate-in fade-in duration-200">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-          <span>{statusMessage}</span>
-        </div>
-      )}
-
-      {/* Main Studio Content */}
-      <main className="px-6 py-8 max-w-7xl mx-auto">
-        {/* TAB 1: OVERVIEW */}
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* Quick Metrics */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: 'Active Learners', val: analytics?.activeLearners || 940, note: '+12% this month', icon: Users, tone: 'text-[#ff6b2b]' },
-                { label: 'Published Tracks', val: tracks.length, note: '7 Disciplinary Areas', icon: BookOpen, tone: 'text-purple-400' },
-                { label: 'Partner Opportunities', val: opportunities.length, note: 'Elite Globex & GFG Active', icon: BriefcaseBusiness, tone: 'text-emerald-400' },
-                { label: 'Verifiable Credentials', val: certificates.length, note: '100% Cryptographic-verified', icon: Award, tone: 'text-[#ffd60a]' }
-              ].map(({ label, val, note, icon: Icon, tone }) => (
-                <div key={label} className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-5 backdrop-blur-xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-[#86868b]">{label}</span>
-                    <Icon className={`h-4 w-4 ${tone}`} />
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold tracking-tight text-white">{val}</p>
-                  <p className="mt-1 text-[11px] text-[#6e6e73]">{note}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Quick Operations Controls */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2 rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-6 backdrop-blur-xl">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-sm font-semibold text-white">Recent Student Applications</h2>
-                    <p className="text-xs text-[#86868b]">Applications awaiting administrative review</p>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('applications')}
-                    className="text-xs text-[#ff6b2b] hover:underline"
-                  >
-                    View All ({applications.length})
-                  </button>
-                </div>
-
-                <div className="divide-y divide-white/[0.06]">
-                  {applications.slice(0, 4).map((app) => (
-                    <div key={app.id} className="py-3 flex items-center justify-between text-xs">
-                      <div>
-                        <p className="font-semibold text-white">{app.studentName}</p>
-                        <p className="text-[#86868b] text-[11px]">{app.roleTitle} · {app.company}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
-                          app.status === 'Selected' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20' :
-                          app.status === 'Shortlisted' ? 'bg-[#e8590c]/15 text-[#ff6b2b] border border-[#ff6b2b]/20' :
-                          'bg-white/[0.06] text-[#86868b]'
-                        }`}>
-                          {app.status}
-                        </span>
-                        <select
-                          value={app.status}
-                          onChange={(e) => handleUpdateAppStatus(app.id, e.target.value as any)}
-                          className="rounded-lg border border-white/[0.1] bg-black/50 px-2 py-1 text-[11px] text-white outline-none"
-                        >
-                          <option value="Under Review">Under Review</option>
-                          <option value="Shortlisted">Shortlist</option>
-                          <option value="Selected">Accept</option>
-                          <option value="Rejected">Reject</option>
-                        </select>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quick Content Actions */}
-              <div className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-6 backdrop-blur-xl space-y-3">
-                <h2 className="text-sm font-semibold text-white mb-2">Publish New Content</h2>
-                <button
-                  onClick={() => { setActiveTab('opportunities'); setShowOppModal(true); }}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] text-xs font-medium text-white transition text-left"
-                >
-                  <span className="flex items-center gap-2">
-                    <Plus className="h-4 w-4 text-[#ff6b2b]" />
-                    <span>Publish Opportunity</span>
-                  </span>
-                  <span className="text-[10px] text-[#6e6e73]">Elite / GFG</span>
-                </button>
-                <button
-                  onClick={() => { setActiveTab('tracks'); setShowTrackModal(true); }}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] text-xs font-medium text-white transition text-left"
-                >
-                  <span className="flex items-center gap-2">
-                    <Plus className="h-4 w-4 text-purple-400" />
-                    <span>Create Learning Track</span>
-                  </span>
-                  <span className="text-[10px] text-[#6e6e73]">7 Streams</span>
-                </button>
-                <button
-                  onClick={() => { setActiveTab('certificates'); setShowCertModal(true); }}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] text-xs font-medium text-white transition text-left"
-                >
-                  <span className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-[#ffd60a]" />
-                    <span>Issue Certificate</span>
-                  </span>
-                  <span className="text-[10px] text-[#6e6e73]">Verifiable</span>
-                </button>
-                <button
-                  onClick={() => { setActiveTab('events'); setShowEventModal(true); }}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] text-xs font-medium text-white transition text-left"
-                >
-                  <span className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-emerald-400" />
-                    <span>Schedule Event / Contest</span>
-                  </span>
-                  <span className="text-[10px] text-[#6e6e73]">Hackathons</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: TRACKS MANAGEMENT */}
-        {activeTab === 'tracks' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-white">Curriculum & Track Management</h2>
-                <p className="text-xs text-[#86868b]">Control multi-disciplinary learning paths visible to students</p>
-              </div>
-              <button
-                onClick={() => setShowTrackModal(true)}
-                className="apple-btn-primary h-9 text-xs rounded-xl px-4 flex items-center gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add Track</span>
-              </button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {tracks.map((t) => (
-                <div key={t.id} className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-5 backdrop-blur-xl flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[#ff6b2b] text-[10px] font-medium">
-                        {t.category}
-                      </span>
-                      <span className="text-[10px] text-[#6e6e73]">{t.difficulty}</span>
-                    </div>
-                    <h3 className="mt-3 text-sm font-semibold text-white">{t.name}</h3>
-                    <p className="mt-1.5 text-xs text-[#86868b] line-clamp-2">{t.description}</p>
-                    <div className="mt-4 flex items-center gap-3 text-[11px] text-[#6e6e73]">
-                      <span>{t.estimatedHours} hours</span>
-                      <span>•</span>
-                      <span>{t.modulesCount || t.syllabus?.length || 4} modules</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                    <Link
-                      href={`/tracks/${t.id}`}
-                      target="_blank"
-                      className="text-xs text-[#ff6b2b] hover:underline flex items-center gap-1"
-                    >
-                      <span>Preview</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteTrack(t.id)}
-                      className="p-1.5 text-[#86868b] hover:text-red-400 transition"
-                      title="Delete Track"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: OPPORTUNITIES MANAGEMENT */}
-        {activeTab === 'opportunities' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-white">Partner Opportunities & Internships</h2>
-                <p className="text-xs text-[#86868b]">Control active roles, stipend details, and eligibility criteria</p>
-              </div>
-              <button
-                onClick={() => setShowOppModal(true)}
-                className="apple-btn-primary h-9 text-xs rounded-xl px-4 flex items-center gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Post Opportunity</span>
-              </button>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 backdrop-blur-xl overflow-hidden">
-              <div className="divide-y divide-white/[0.06]">
-                {opportunities.map((opp) => (
-                  <div key={opp.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-white">{opp.title}</h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#e8590c]/15 text-[#ff6b2b]">
-                          {opp.company}
-                        </span>
-                        {opp.partnerBadge && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400">
-                            {opp.partnerBadge}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[#86868b]">{opp.description}</p>
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#6e6e73] pt-1">
-                        <span>{opp.stipend}</span>
-                        <span>•</span>
-                        <span>{opp.mode}</span>
-                        <span>•</span>
-                        <span>Deadline: {opp.deadline}</span>
-                        <span>•</span>
-                        <span className="text-white font-medium">{opp.applicantsCount} Applicants</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleDeleteOpportunity(opp.id)}
-                        className="apple-btn-secondary h-8 px-3 rounded-lg text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-1"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: APPLICATIONS PIPELINE */}
-        {activeTab === 'applications' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-white">Student Application Pipeline</h2>
-              <p className="text-xs text-[#86868b]">Review student candidates and update partner hiring status</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 backdrop-blur-xl overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-white/[0.08] bg-white/[0.02] text-[11px] uppercase tracking-wider text-[#86868b]">
-                  <tr>
-                    <th className="py-3 px-4">Student</th>
-                    <th className="py-3 px-4">Target Role & Partner</th>
-                    <th className="py-3 px-4">Stream & Year</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Consent</th>
-                    <th className="py-3 px-4">Decision</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.06]">
-                  {applications.map((app) => (
-                    <tr key={app.id} className="hover:bg-white/[0.02] transition">
-                      <td className="py-3 px-4">
-                        <p className="font-semibold text-white">{app.studentName}</p>
-                        <p className="text-[11px] text-[#86868b]">{app.studentEmail}</p>
-                      </td>
-                      <td className="py-3 px-4">
-                        <p className="font-medium text-white">{app.roleTitle}</p>
-                        <p className="text-[11px] text-[#ff6b2b]">{app.company}</p>
-                      </td>
-                      <td className="py-3 px-4 text-[#86868b]">
-                        {app.stream} (Year {app.year})
-                      </td>
-                      <td className="py-3 px-4 text-[#6e6e73]">
-                        {app.appliedDate}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400">
-                          <Check className="h-3 w-3" />
-                          <span>Verified</span>
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <select
-                          value={app.status}
-                          onChange={(e) => handleUpdateAppStatus(app.id, e.target.value as any)}
-                          className="rounded-lg border border-white/[0.12] bg-[#09090b] px-2.5 py-1 text-xs text-white outline-none focus:border-[#ff6b2b]"
-                        >
-                          <option value="Under Review">Under Review</option>
-                          <option value="Shortlisted">Shortlisted</option>
-                          <option value="Selected">Selected / Offer</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: EVENTS & HACKATHONS */}
-        {activeTab === 'events' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-white">Events & Competitions Studio</h2>
-                <p className="text-xs text-[#86868b]">Manage GeeksforGeeks contests, Unstop hackathons, and webinars</p>
-              </div>
-              <button
-                onClick={() => setShowEventModal(true)}
-                className="apple-btn-primary h-9 text-xs rounded-xl px-4 flex items-center gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Create Event</span>
-              </button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {events.map((ev) => (
-                <div key={ev.id} className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 p-5 backdrop-blur-xl">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="px-2 py-0.5 rounded-full bg-[#e8590c]/15 text-[#ff6b2b] text-[10px] font-medium">
-                      {ev.organizer}
-                    </span>
-                    <span className="text-[10px] text-emerald-400">{ev.status}</span>
-                  </div>
-                  <h3 className="mt-3 text-sm font-semibold text-white">{ev.title}</h3>
-                  <p className="mt-1.5 text-xs text-[#86868b]">{ev.description}</p>
-                  <div className="mt-4 flex items-center gap-3 text-[11px] text-[#6e6e73]">
-                    <span>{ev.date}</span>
-                    <span>•</span>
-                    <span>{ev.time}</span>
-                    <span>•</span>
-                    <span className="text-white">{ev.spotsFilled} / {ev.spotsTotal} registered</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: CERTIFICATES ISSUANCE */}
-        {activeTab === 'certificates' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-white">Verifiable Certificates Studio</h2>
-                <p className="text-xs text-[#86868b]">Issue officially verifiable credentials with cryptographic IDs</p>
-              </div>
-              <button
-                onClick={() => setShowCertModal(true)}
-                className="apple-btn-primary h-9 text-xs rounded-xl px-4 flex items-center gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Issue Certificate</span>
-              </button>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.08] bg-[#121216]/80 backdrop-blur-xl overflow-hidden">
-              <div className="divide-y divide-white/[0.06]">
-                {certificates.map((cert) => (
-                  <div key={cert.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[#ffd60a] font-semibold">{cert.certificateId}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[10px] text-[#ff6b2b]">
-                          {cert.grade}
-                        </span>
-                      </div>
-                      <p className="font-semibold text-white mt-1">{cert.studentName} ({cert.studentEmail})</p>
-                      <p className="text-[#86868b] text-[11px]">{cert.trackName}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-[#6e6e73]">Issued: {cert.issueDate}</span>
-                      <Link
-                        href={`/verify/${cert.certificateId}`}
-                        target="_blank"
-                        className="apple-btn-secondary h-8 px-3 rounded-lg text-xs flex items-center gap-1 text-[#ff6b2b]"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        <span>Public Proof</span>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* MODAL: CREATE TRACK */}
-      {showTrackModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-white/[0.12] bg-[#121216] p-6 shadow-2xl">
-            <h3 className="text-base font-semibold text-white mb-4">Create New Learning Track</h3>
-            <form onSubmit={handleCreateTrack} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Track Name</label>
-                <input
-                  required
-                  value={trackForm.name}
-                  onChange={(e) => setTrackForm({ ...trackForm, name: e.target.value })}
-                  placeholder="e.g. Quantitative Finance & Algorithmic Trading"
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Category</label>
-                  <select
-                    value={trackForm.category}
-                    onChange={(e) => setTrackForm({ ...trackForm, category: e.target.value })}
-                    className="apple-input text-xs"
-                  >
-                    <option value="Technology">Technology</option>
-                    <option value="AI & Data">AI & Data</option>
-                    <option value="Design">Design</option>
-                    <option value="Business">Business</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Core Engineering">Core Engineering</option>
-                    <option value="Career & Research">Career & Research</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Difficulty</label>
-                  <select
-                    value={trackForm.difficulty}
-                    onChange={(e) => setTrackForm({ ...trackForm, difficulty: e.target.value })}
-                    className="apple-input text-xs"
-                  >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Estimated Hours</label>
-                  <input
-                    type="number"
-                    value={trackForm.estimatedHours}
-                    onChange={(e) => setTrackForm({ ...trackForm, estimatedHours: Number(e.target.value) })}
-                    className="apple-input text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Modules Count</label>
-                  <input
-                    type="number"
-                    value={trackForm.modulesCount}
-                    onChange={(e) => setTrackForm({ ...trackForm, modulesCount: Number(e.target.value) })}
-                    className="apple-input text-xs"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Description</label>
-                <textarea
-                  required
-                  rows={2}
-                  value={trackForm.description}
-                  onChange={(e) => setTrackForm({ ...trackForm, description: e.target.value })}
-                  placeholder="What will students master upon completion?"
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowTrackModal(false)}
-                  className="apple-btn-secondary h-8 px-3 rounded-lg text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="apple-btn-primary h-8 px-4 rounded-lg text-xs"
-                >
-                  Publish Track
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: CREATE OPPORTUNITY */}
-      {showOppModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-white/[0.12] bg-[#121216] p-6 shadow-2xl">
-            <h3 className="text-base font-semibold text-white mb-4">Post Partner Opportunity</h3>
-            <form onSubmit={handleCreateOpportunity} className="space-y-3.5 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Role Title</label>
-                  <input
-                    required
-                    value={oppForm.title}
-                    onChange={(e) => setOppForm({ ...oppForm, title: e.target.value })}
-                    placeholder="e.g. AI Research Intern"
-                    className="apple-input text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Company / Partner</label>
-                  <input
-                    required
-                    value={oppForm.company}
-                    onChange={(e) => setOppForm({ ...oppForm, company: e.target.value })}
-                    placeholder="e.g. Elite Globex"
-                    className="apple-input text-xs"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Stipend</label>
-                  <input
-                    required
-                    value={oppForm.stipend}
-                    onChange={(e) => setOppForm({ ...oppForm, stipend: e.target.value })}
-                    placeholder="₹25,000 / month"
-                    className="apple-input text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Work Mode</label>
-                  <select
-                    value={oppForm.mode}
-                    onChange={(e) => setOppForm({ ...oppForm, mode: e.target.value })}
-                    className="apple-input text-xs"
-                  >
-                    <option value="Remote">Remote</option>
-                    <option value="Hybrid">Hybrid</option>
-                    <option value="On-site">On-site</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Required Skills (comma separated)</label>
-                <input
-                  value={oppForm.skills}
-                  onChange={(e) => setOppForm({ ...oppForm, skills: e.target.value })}
-                  placeholder="Next.js, Python, PostgreSQL, REST APIs"
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Description</label>
-                <textarea
-                  required
-                  rows={2}
-                  value={oppForm.description}
-                  onChange={(e) => setOppForm({ ...oppForm, description: e.target.value })}
-                  placeholder="Overview of project responsibilities..."
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowOppModal(false)}
-                  className="apple-btn-secondary h-8 px-3 rounded-lg text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="apple-btn-primary h-8 px-4 rounded-lg text-xs"
-                >
-                  Publish to Students
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ISSUE CERTIFICATE */}
-      {showCertModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/[0.12] bg-[#121216] p-6 shadow-2xl">
-            <h3 className="text-base font-semibold text-white mb-4">Issue Verifiable Certificate</h3>
-            <form onSubmit={handleIssueCertificate} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Student Full Name</label>
-                <input
-                  required
-                  value={certForm.studentName}
-                  onChange={(e) => setCertForm({ ...certForm, studentName: e.target.value })}
-                  placeholder="Harsh Dixit"
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Student Email</label>
-                <input
-                  required
-                  type="email"
-                  value={certForm.studentEmail}
-                  onChange={(e) => setCertForm({ ...certForm, studentEmail: e.target.value })}
-                  placeholder="harsh@buildnext.local"
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Track Completed</label>
-                <select
-                  value={certForm.trackName}
-                  onChange={(e) => setCertForm({ ...certForm, trackName: e.target.value })}
-                  className="apple-input text-xs"
-                >
-                  {tracks.map(t => (
-                    <option key={t.id} value={t.name}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Performance Grade</label>
-                <select
-                  value={certForm.grade}
-                  onChange={(e) => setCertForm({ ...certForm, grade: e.target.value })}
-                  className="apple-input text-xs"
-                >
-                  <option value="Distinction">Distinction (Top 10%)</option>
-                  <option value="Merit">Merit</option>
-                  <option value="Pass">Pass</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCertModal(false)}
-                  className="apple-btn-secondary h-8 px-3 rounded-lg text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="apple-btn-primary h-8 px-4 rounded-lg text-xs"
-                >
-                  Generate & Sign Certificate
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: CREATE EVENT */}
-      {showEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/[0.12] bg-[#121216] p-6 shadow-2xl">
-            <h3 className="text-base font-semibold text-white mb-4">Create Event / Challenge</h3>
-            <form onSubmit={handleCreateEvent} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Event Title</label>
-                <input
-                  required
-                  value={eventForm.title}
-                  onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                  placeholder="e.g. GeeksforGeeks Algorithmic Sprint"
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Organizer</label>
-                  <input
-                    value={eventForm.organizer}
-                    onChange={(e) => setEventForm({ ...eventForm, organizer: e.target.value })}
-                    placeholder="GFG x BuildNext"
-                    className="apple-input text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Event Type</label>
-                  <select
-                    value={eventForm.type}
-                    onChange={(e) => setEventForm({ ...eventForm, type: e.target.value })}
-                    className="apple-input text-xs"
-                  >
-                    <option value="Coding Contest">Coding Contest</option>
-                    <option value="Hackathon">Hackathon</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Demo Day">Demo Day</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Date</label>
-                  <input
-                    type="date"
-                    value={eventForm.date}
-                    onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
-                    className="apple-input text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#86868b] mb-1 font-medium">Total Spots</label>
-                  <input
-                    type="number"
-                    value={eventForm.spotsTotal}
-                    onChange={(e) => setEventForm({ ...eventForm, spotsTotal: Number(e.target.value) })}
-                    className="apple-input text-xs"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[#86868b] mb-1 font-medium">Description</label>
-                <textarea
-                  rows={2}
-                  value={eventForm.description}
-                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                  className="apple-input text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEventModal(false)}
-                  className="apple-btn-secondary h-8 px-3 rounded-lg text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="apple-btn-primary h-8 px-4 rounded-lg text-xs"
-                >
-                  Schedule Event
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      ))}
     </div>
   );
 }
 
+/* ── Stat Card ── */
+function Stat({ label, value, icon: Icon, g1, g2 }: { label:string;value:number;icon:any;g1:string;g2:string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br ${g1} ${g2} border border-white/[0.08] shadow-2xl hover:scale-[1.02] transition-transform duration-200 select-none`}>
+      <div className="absolute -right-4 -top-4 opacity-[0.07]"><Icon size={88}/></div>
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40 mb-2">{label}</p>
+      <p className="text-5xl font-black text-white tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+/* ── Modal ── */
+function Modal({ title, onClose, children }: { title:string;onClose:()=>void;children:React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+      <div className="bg-[#0f0f1a] border border-white/[0.09] rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto shadow-2xl">
+        <div className="sticky top-0 bg-[#0f0f1a]/95 backdrop-blur border-b border-white/[0.07] px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+          <h2 className="text-sm font-bold text-white">{title}</h2>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/[0.08] rounded-lg transition-colors"><X size={17} className="text-white/40"/></button>
+        </div>
+        <div className="p-6 space-y-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Field ── */
+const F = ({ label, children }: { label:string;children:React.ReactNode }) => (
+  <div>
+    <label className="block text-[10px] font-black uppercase tracking-[0.12em] text-white/35 mb-1.5">{label}</label>
+    {children}
+  </div>
+);
+const inp = "w-full px-3.5 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.06] transition-all";
+const sel = "w-full px-3.5 py-2.5 bg-[#16162a] border border-white/[0.08] rounded-xl text-white text-sm focus:outline-none focus:border-blue-500/50 transition-all";
+
+/* ═══════════════ MAIN ═══════════════ */
+export default function AdminOpsStudio() {
+  const router = useRouter();
+  const [sideOpen, setSideOpen] = useState(true);
+  const [tab, setTab]   = useState<'overview'|'tracks'|'opportunities'|'students'>('overview');
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const [stats,  setStats]  = useState<Analytics>({students:0,tracks:0,opportunities:0});
+  const [tracks, setTracks] = useState<TrackItem[]>([]);
+  const [opps,   setOpps]   = useState<OppItem[]>([]);
+  const [q, setQ] = useState('');
+
+  const [tModal, setTModal] = useState(false);
+  const [oModal, setOModal] = useState(false);
+
+  const initT = { name:'', category:'Technology', difficulty:'Intermediate', estimatedHours:40, modulesCount:8, description:'', prerequisites:'' };
+  const initO = { title:'', company:'', type:'Internship', mode:'Remote', location:'', stipend:'', description:'', skills:'', eligibility:'Open to all students', deadline:new Date(Date.now()+30*864e5).toISOString().slice(0,10) };
+  const [tf, setTf] = useState(initT);
+  const [of, setOf] = useState(initO);
+
+  const toast = useCallback((message:string, type:Toast['type']='info') => {
+    const id = Date.now().toString();
+    setToasts(p=>[...p,{id,message,type}]);
+    setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)), 3500);
+  },[]);
+
+  const load = useCallback(async (silent=false) => {
+    if (!silent) setLoading(true); else setBusy(true);
+    try {
+      const [a,t,o] = await Promise.all([
+        fetch('/api/admin/overview').then(r=>r.ok?r.json():{students:0,tracks:0,opportunities:0}),
+        fetch('/api/content/tracks').then(r=>r.ok?r.json():{tracks:[]}),
+        fetch('/api/content/opportunities').then(r=>r.ok?r.json():{opportunities:[]}),
+      ]);
+      setStats(a);
+      setTracks(t.tracks||[]);
+      setOpps(o.opportunities||[]);
+    } catch { toast('Failed to load','error'); }
+    finally { setLoading(false); setBusy(false); }
+  },[toast]);
+
+  useEffect(()=>{ load(); },[load]);
+
+  const logout = async () => {
+    await fetch('/api/admin/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})});
+    router.push('/admin-ops/access');
+  };
+
+  const createTrack = async (e:React.FormEvent) => {
+    e.preventDefault();
+    const r = await fetch('/api/content/tracks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...tf,prerequisites:tf.prerequisites.split(',').map(s=>s.trim()).filter(Boolean)})});
+    const d = await r.json();
+    if (r.ok) { toast('Track created!','success'); setTModal(false); setTf(initT); load(true); }
+    else toast(d.error||'Failed','error');
+  };
+
+  const delTrack = async (id:string) => {
+    if (!confirm('Delete this track?')) return;
+    const r = await fetch(`/api/content/tracks?id=${id}`,{method:'DELETE'});
+    if (r.ok) { toast('Deleted','success'); setTracks(p=>p.filter(t=>t.id!==id)); setStats(p=>({...p,tracks:Math.max(0,p.tracks-1)})); }
+    else toast('Failed','error');
+  };
+
+  const createOpp = async (e:React.FormEvent) => {
+    e.preventDefault();
+    const r = await fetch('/api/content/opportunities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...of,skills:of.skills.split(',').map(s=>s.trim()).filter(Boolean)})});
+    const d = await r.json();
+    if (r.ok) { toast('Opportunity posted!','success'); setOModal(false); setOf(initO); load(true); }
+    else toast(d.error||'Failed','error');
+  };
+
+  const delOpp = async (id:string) => {
+    if (!confirm('Delete?')) return;
+    const r = await fetch(`/api/content/opportunities?id=${id}`,{method:'DELETE'});
+    if (r.ok) { toast('Removed','success'); setOpps(p=>p.filter(o=>o.id!==id)); setStats(p=>({...p,opportunities:Math.max(0,p.opportunities-1)})); }
+    else toast('Failed','error');
+  };
+
+  const nav = [
+    {id:'overview',label:'Overview',icon:BarChart3},
+    {id:'tracks',label:'Tracks',icon:BookOpen},
+    {id:'opportunities',label:'Opportunities',icon:BriefcaseBusiness},
+    {id:'students',label:'Students',icon:Users},
+  ] as const;
+
+  const fT = tracks.filter(t=>t.name?.toLowerCase().includes(q.toLowerCase()));
+  const fO = opps.filter(o=>o.title?.toLowerCase().includes(q.toLowerCase())||o.company?.toLowerCase().includes(q.toLowerCase()));
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-[#07070f]">
+      <div className="text-center space-y-4">
+        <div className="w-10 h-10 mx-auto rounded-full border-[3px] border-blue-500/20 border-t-blue-500 animate-spin"/>
+        <p className="text-white/25 text-xs font-bold tracking-widest uppercase">Loading Admin Studio</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-[#07070f] text-white overflow-hidden">
+      <Toasts list={toasts}/>
+
+      {/* ═══ SIDEBAR ═══ */}
+      <aside className={`${sideOpen?'w-56':'w-[66px]'} flex-shrink-0 flex flex-col bg-[#0b0b17] border-r border-white/[0.05] transition-all duration-300 ease-in-out`}>
+        <div className="h-14 flex items-center justify-between px-4 border-b border-white/[0.05]">
+          {sideOpen && (
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/25">
+                <Shield size={12} className="text-white"/>
+              </div>
+              <span className="text-xs font-bold text-white/70 whitespace-nowrap">Admin Studio</span>
+            </div>
+          )}
+          <button onClick={()=>setSideOpen(p=>!p)} className="ml-auto p-1.5 hover:bg-white/[0.06] rounded-lg transition-colors flex-shrink-0">
+            <Menu size={16} className="text-white/35"/>
+          </button>
+        </div>
+
+        <nav className="flex-1 p-2.5 space-y-0.5">
+          {nav.map(({id,label,icon:Icon})=>{
+            const active=tab===id;
+            return (
+              <button key={id} onClick={()=>setTab(id)}
+                title={!sideOpen?label:undefined}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all
+                  ${active?'bg-white/[0.07] text-white':'text-white/30 hover:text-white/65 hover:bg-white/[0.04]'}`}>
+                <Icon size={16} className={`flex-shrink-0 ${active?'text-blue-400':''}`}/>
+                {sideOpen&&<span className="whitespace-nowrap">{label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="p-2.5 border-t border-white/[0.05]">
+          <button onClick={logout} title={!sideOpen?'Sign Out':undefined}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-red-400/40 hover:text-red-400 hover:bg-red-500/[0.07] transition-all">
+            <LogOut size={16} className="flex-shrink-0"/>
+            {sideOpen&&<span className="whitespace-nowrap">Sign Out</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* ═══ MAIN ═══ */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Topbar */}
+        <header className="h-14 bg-[#0b0b17]/70 backdrop-blur border-b border-white/[0.05] flex items-center justify-between px-6 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-sm font-bold text-white/70">
+              {tab==='overview'?'Operations Overview':tab==='tracks'?'Tracks':tab==='opportunities'?'Opportunities':'Students'}
+            </h1>
+            {busy&&<RefreshCw size={12} className="text-blue-400/60 animate-spin"/>}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20"/>
+              <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…"
+                className="pl-8 pr-3 py-1.5 bg-white/[0.04] border border-white/[0.07] rounded-xl text-xs text-white placeholder:text-white/15 focus:outline-none focus:border-blue-500/40 w-40 transition-all"/>
+            </div>
+            <button onClick={()=>load(true)} className="p-1.5 hover:bg-white/[0.06] rounded-xl transition-colors">
+              <RefreshCw size={13} className="text-white/25 hover:text-white/50 transition-colors"/>
+            </button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto p-6">
+
+          {/* ─── OVERVIEW ─── */}
+          {tab==='overview'&&(
+            <div className="space-y-6 max-w-4xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Stat label="Students"     value={stats.students}      icon={Users}             g1="from-blue-900/60"   g2="to-indigo-900/40"/>
+                <Stat label="Tracks"       value={stats.tracks}        icon={BookOpen}          g1="from-violet-900/60" g2="to-purple-900/40"/>
+                <Stat label="Opportunities"value={stats.opportunities} icon={BriefcaseBusiness} g1="from-orange-900/60" g2="to-red-900/40"/>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button onClick={()=>{setTab('tracks');setTModal(true);}}
+                  className="group flex items-center gap-4 p-5 rounded-2xl bg-blue-600/[0.06] border border-blue-500/[0.12] hover:border-blue-500/30 hover:bg-blue-600/[0.10] transition-all text-left">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors flex-shrink-0">
+                    <Plus size={18} className="text-blue-400"/>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white/80">Add Learning Track</p>
+                    <p className="text-xs text-white/30 mt-0.5">Create a new curriculum pathway</p>
+                  </div>
+                </button>
+                <button onClick={()=>{setTab('opportunities');setOModal(true);}}
+                  className="group flex items-center gap-4 p-5 rounded-2xl bg-orange-600/[0.06] border border-orange-500/[0.12] hover:border-orange-500/30 hover:bg-orange-600/[0.10] transition-all text-left">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors flex-shrink-0">
+                    <Plus size={18} className="text-orange-400"/>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white/80">Post Opportunity</p>
+                    <p className="text-xs text-white/30 mt-0.5">Add internship or job listing</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Recent list */}
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.015] overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-white/[0.05] flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-white/30">Recent Tracks</p>
+                  <button onClick={()=>setTab('tracks')} className="text-[11px] text-blue-400/60 hover:text-blue-400 transition-colors">View all →</button>
+                </div>
+                {tracks.length===0
+                  ?<p className="text-center text-white/15 text-xs py-10">No tracks yet — create one above</p>
+                  :tracks.slice(0,5).map(t=>(
+                    <div key={t.id} className="flex items-center justify-between px-5 py-3 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.015] transition-colors">
+                      <div>
+                        <p className="text-sm font-medium text-white/80">{t.name}</p>
+                        <p className="text-[11px] text-white/25 mt-0.5">{t.category} · {t.difficulty}</p>
+                      </div>
+                      <span className="text-[11px] text-white/20 flex-shrink-0 ml-4">{t.estimatedHours}h</span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          )}
+
+          {/* ─── TRACKS ─── */}
+          {tab==='tracks'&&(
+            <div className="space-y-4 max-w-5xl">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-white/25">{fT.length} track{fT.length!==1?'s':''}</p>
+                <button onClick={()=>setTModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:brightness-110 transition-all">
+                  <Plus size={14}/> Add Track
+                </button>
+              </div>
+              {fT.length===0
+                ?<div className="flex flex-col items-center justify-center py-24 rounded-2xl border border-dashed border-white/[0.06]">
+                  <BookOpen size={36} className="text-white/[0.08] mb-3"/>
+                  <p className="text-white/20 text-sm">No tracks yet</p>
+                </div>
+                :<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {fT.map(t=>(
+                    <div key={t.id} className="group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 hover:border-white/[0.09] hover:bg-white/[0.03] transition-all hover:shadow-xl hover:shadow-black/50">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-bold text-white/85 text-sm leading-tight flex-1 pr-2">{t.name}</h3>
+                        <button onClick={()=>delTrack(t.id)} className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500/15 rounded-lg transition-all flex-shrink-0">
+                          <Trash2 size={13} className="text-red-400"/>
+                        </button>
+                      </div>
+                      {t.description&&<p className="text-[11px] text-white/25 line-clamp-2 mb-3">{t.description}</p>}
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border
+                          ${t.difficulty==='Beginner'?'bg-green-500/10 text-green-400 border-green-500/20':t.difficulty==='Intermediate'?'bg-amber-500/10 text-amber-400 border-amber-500/20':'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                          {t.difficulty}
+                        </span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/[0.04] text-white/30 border border-white/[0.06]">{t.category}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/[0.04] text-white/30 border border-white/[0.06]">{t.estimatedHours}h · {t.modulesCount} mod</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+          )}
+
+          {/* ─── OPPORTUNITIES ─── */}
+          {tab==='opportunities'&&(
+            <div className="space-y-4 max-w-4xl">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-white/25">{fO.length} listing{fO.length!==1?'s':''}</p>
+                <button onClick={()=>setOModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:brightness-110 transition-all">
+                  <Plus size={14}/> Post Opportunity
+                </button>
+              </div>
+              {fO.length===0
+                ?<div className="flex flex-col items-center justify-center py-24 rounded-2xl border border-dashed border-white/[0.06]">
+                  <BriefcaseBusiness size={36} className="text-white/[0.08] mb-3"/>
+                  <p className="text-white/20 text-sm">No listings yet</p>
+                </div>
+                :<div className="space-y-3">
+                  {fO.map(o=>(
+                    <div key={o.id} className="group flex items-center gap-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 hover:border-white/[0.09] hover:bg-white/[0.03] transition-all">
+                      <div className="w-9 h-9 rounded-xl bg-orange-500/[0.08] border border-orange-500/[0.12] flex items-center justify-center flex-shrink-0">
+                        <BriefcaseBusiness size={16} className="text-orange-400"/>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-white/85 text-sm">{o.title}</p>
+                            <p className="text-[11px] text-white/30 mt-0.5">{o.company} · {o.mode} · {o.location}</p>
+                          </div>
+                          <button onClick={()=>delOpp(o.id)} className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500/15 rounded-lg transition-all flex-shrink-0">
+                            <Trash2 size={13} className="text-red-400"/>
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">{o.type}</span>
+                          {o.stipend&&<span className="text-[10px] px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">{o.stipend}</span>}
+                          {o.deadline&&<span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/[0.04] text-white/25 border border-white/[0.06]">Due {o.deadline}</span>}
+                          <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${o.status==='published'?'bg-emerald-500/10 text-emerald-400 border-emerald-500/20':'bg-white/[0.04] text-white/20 border-white/[0.06]'}`}>{o.status||'draft'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+          )}
+
+          {/* ─── STUDENTS ─── */}
+          {tab==='students'&&(
+            <div className="max-w-lg">
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.015] overflow-hidden">
+                <div className="px-5 py-4 border-b border-white/[0.05]">
+                  <p className="text-sm font-bold text-white/60">Student Registry</p>
+                  <p className="text-xs text-white/25 mt-0.5">Total: <span className="text-white/50 font-semibold">{stats.students}</span> registered</p>
+                </div>
+                <div className="p-10 text-center">
+                  <Users size={36} className="mx-auto text-white/[0.08] mb-3"/>
+                  <p className="text-white/20 text-sm">Full student list</p>
+                  <p className="text-white/12 text-xs mt-1">Manage via MongoDB Compass or add /api/admin/users route</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </main>
+      </div>
+
+      {/* ═══ TRACK MODAL ═══ */}
+      {tModal&&(
+        <Modal title="Add Learning Track" onClose={()=>setTModal(false)}>
+          <form onSubmit={createTrack} className="space-y-4">
+            <F label="Track Name *"><input required value={tf.name} onChange={e=>setTf(p=>({...p,name:e.target.value}))} placeholder="e.g. Full Stack Web Development" className={inp}/></F>
+            <div className="grid grid-cols-2 gap-3">
+              <F label="Category *">
+                <select value={tf.category} onChange={e=>setTf(p=>({...p,category:e.target.value}))} className={sel}>
+                  {['Technology','AI & Data','Design','Business','Finance','Core Engineering','Career & Research'].map(c=><option key={c}>{c}</option>)}
+                </select>
+              </F>
+              <F label="Difficulty *">
+                <select value={tf.difficulty} onChange={e=>setTf(p=>({...p,difficulty:e.target.value}))} className={sel}>
+                  <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+                </select>
+              </F>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <F label="Est. Hours"><input type="number" min={1} value={tf.estimatedHours} onChange={e=>setTf(p=>({...p,estimatedHours:+e.target.value}))} className={inp}/></F>
+              <F label="Modules"><input type="number" min={1} value={tf.modulesCount} onChange={e=>setTf(p=>({...p,modulesCount:+e.target.value}))} className={inp}/></F>
+            </div>
+            <F label="Description"><textarea rows={3} value={tf.description} onChange={e=>setTf(p=>({...p,description:e.target.value}))} placeholder="Brief overview…" className={`${inp} resize-none`}/></F>
+            <F label="Prerequisites (comma-separated)"><input value={tf.prerequisites} onChange={e=>setTf(p=>({...p,prerequisites:e.target.value}))} placeholder="e.g. Basic HTML, JavaScript" className={inp}/></F>
+            <div className="flex gap-3 pt-1">
+              <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:brightness-110 transition-all shadow-lg shadow-blue-500/20">Create Track</button>
+              <button type="button" onClick={()=>setTModal(false)} className="flex-1 py-2.5 bg-white/[0.04] border border-white/[0.08] text-white/40 text-sm font-semibold rounded-xl hover:bg-white/[0.06] transition-all">Cancel</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ═══ OPP MODAL ═══ */}
+      {oModal&&(
+        <Modal title="Post Opportunity" onClose={()=>setOModal(false)}>
+          <form onSubmit={createOpp} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <F label="Title *"><input required value={of.title} onChange={e=>setOf(p=>({...p,title:e.target.value}))} placeholder="e.g. Frontend Intern" className={inp}/></F>
+              <F label="Company *"><input required value={of.company} onChange={e=>setOf(p=>({...p,company:e.target.value}))} placeholder="e.g. TechCorp" className={inp}/></F>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <F label="Type">
+                <select value={of.type} onChange={e=>setOf(p=>({...p,type:e.target.value}))} className={sel}>
+                  <option>Internship</option><option>Fellowship</option><option>Job</option><option>Competition</option>
+                </select>
+              </F>
+              <F label="Mode">
+                <select value={of.mode} onChange={e=>setOf(p=>({...p,mode:e.target.value}))} className={sel}>
+                  <option>Remote</option><option>Hybrid</option><option>On-site</option>
+                </select>
+              </F>
+              <F label="Location *"><input required value={of.location} onChange={e=>setOf(p=>({...p,location:e.target.value}))} placeholder="Bangalore" className={inp}/></F>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <F label="Stipend"><input value={of.stipend} onChange={e=>setOf(p=>({...p,stipend:e.target.value}))} placeholder="₹25,000/month" className={inp}/></F>
+              <F label="Deadline *"><input type="date" required value={of.deadline} onChange={e=>setOf(p=>({...p,deadline:e.target.value}))} className={inp}/></F>
+            </div>
+            <F label="Skills (comma-separated)"><input value={of.skills} onChange={e=>setOf(p=>({...p,skills:e.target.value}))} placeholder="React, Node.js, MongoDB" className={inp}/></F>
+            <F label="Description *"><textarea required rows={3} value={of.description} onChange={e=>setOf(p=>({...p,description:e.target.value}))} placeholder="Role overview and responsibilities…" className={`${inp} resize-none`}/></F>
+            <F label="Eligibility"><input value={of.eligibility} onChange={e=>setOf(p=>({...p,eligibility:e.target.value}))} className={inp}/></F>
+            <div className="flex gap-3 pt-1">
+              <button type="submit" className="flex-1 py-2.5 bg-gradient-to-r from-orange-600 to-red-600 text-white text-sm font-bold rounded-xl hover:brightness-110 transition-all shadow-lg shadow-orange-500/20">Post Opportunity</button>
+              <button type="button" onClick={()=>setOModal(false)} className="flex-1 py-2.5 bg-white/[0.04] border border-white/[0.08] text-white/40 text-sm font-semibold rounded-xl hover:bg-white/[0.06] transition-all">Cancel</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}

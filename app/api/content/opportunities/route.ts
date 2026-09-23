@@ -1,69 +1,86 @@
 import { NextResponse } from 'next/server';
-import { DataStore, Opportunity } from '@/lib/data-service';
+import { requireAdmin } from '@/lib/access';
+import { connectDB } from '@/lib/mongodb';
+import Opportunity from '@/models/Opportunity';
 
 export async function GET() {
-  const opportunities = DataStore.getOpportunities();
-  return NextResponse.json({ success: true, opportunities });
+  try {
+    await connectDB();
+    const opps = await Opportunity.find().sort({ createdAt: -1 }).lean();
+    const mapped = (opps as any[]).map(o => ({
+      id:             o._id.toString(),
+      title:          o.title,
+      company:        o.company,
+      type:           o.type,
+      mode:           o.mode,
+      location:       o.location,
+      stipend:        o.stipend || '',
+      deadline:       o.deadline ? new Date(o.deadline).toISOString().slice(0, 10) : '',
+      status:         o.status,
+      applicantsCount:o.applications || 0,
+      description:    o.description,
+    }));
+    return NextResponse.json({ success: true, opportunities: mapped });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
+  if (!await requireAdmin())
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   try {
+    await connectDB();
     const body = await req.json();
-    if (!body.title || !body.company) {
-      return NextResponse.json({ error: 'Title and company are required' }, { status: 400 });
-    }
-
-    const newOpp: Opportunity = {
-      id: body.id || `opp-${Date.now()}`,
-      title: body.title,
-      company: body.company,
-      type: body.type || 'Internship',
-      mode: body.mode || 'Remote',
-      location: body.location || 'Remote',
-      stipend: body.stipend || 'Competitive Stipend',
-      description: body.description || '',
-      responsibilities: Array.isArray(body.responsibilities) 
-        ? body.responsibilities 
-        : (body.responsibilities ? body.responsibilities.split('\n').filter(Boolean) : ['Contribute to product features']),
-      skills: Array.isArray(body.skills) 
-        ? body.skills 
-        : (body.skills ? body.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : []),
-      eligibility: body.eligibility || 'Open to all students',
-      deadline: body.deadline || '2026-11-30',
-      status: body.status || 'published',
-      featured: Boolean(body.featured),
-      applicantsCount: 0,
-      partnerBadge: body.partnerBadge || undefined
-    };
-
-    DataStore.addOpportunity(newOpp);
-    return NextResponse.json({ success: true, opportunity: newOpp }, { status: 201 });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    if (!body.title || !body.company || !body.description)
+      return NextResponse.json({ error: 'Title, Company and Description required' }, { status: 400 });
+    const opp = await Opportunity.create({
+      title:       body.title,
+      company:     body.company,
+      type:        body.type        || 'Internship',
+      mode:        body.mode        || 'Remote',
+      location:    body.location    || 'Remote',
+      stipend:     body.stipend     || '',
+      description: body.description,
+      skills:      Array.isArray(body.skills)
+                     ? body.skills
+                     : (body.skills ? String(body.skills).split(',').map((s: string) => s.trim()).filter(Boolean) : []),
+      eligibility: body.eligibility || '',
+      deadline:    body.deadline    ? new Date(body.deadline) : null,
+      status:      'published',
+      featured:    false,
+    });
+    return NextResponse.json({ success: true, opportunity: opp }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function PUT(req: Request) {
+  if (!await requireAdmin())
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   try {
+    await connectDB();
     const body = await req.json();
-    if (!body.id) return NextResponse.json({ error: 'Opportunity ID is required' }, { status: 400 });
-    const updated = DataStore.updateOpportunity(body.id, body);
+    if (!body.id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    const updated = await Opportunity.findByIdAndUpdate(body.id, body, { new: true });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ success: true, opportunity: updated });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
+  if (!await requireAdmin())
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    DataStore.deleteOpportunity(id);
+    await connectDB();
+    const id = new URL(req.url).searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    await Opportunity.findByIdAndDelete(id);
     return NextResponse.json({ success: true });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-
