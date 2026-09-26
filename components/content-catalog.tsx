@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Search } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRemote } from '@/lib/client';
 import { text, number, type Resource, type Row } from '@/lib/content-schema';
@@ -10,12 +10,10 @@ import type { AccountData, Collection } from '@/lib/view-types';
 import { Button } from '@/components/ui/button';
 import {
   Badge,
-  Card,
   EmptyState,
   ErrorState,
   Input,
   LoadingState,
-  PageHeading,
   Pagination,
 } from '@/components/ui/primitives';
 export const catalogConfig = {
@@ -58,18 +56,46 @@ export const catalogConfig = {
   },
 };
 export type CatalogResource = keyof typeof catalogConfig;
+function ProgressBar({ value, label }: { value: number; label: string }) {
+  const clamped = Math.min(100, Math.max(0, value));
+  return (
+    <div>
+      <div
+        className="h-2 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuenow={clamped}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
+        <div
+          className="progress-glow h-full rounded-full transition-all duration-700"
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs font-medium text-muted-foreground">
+        <span className="text-gradient font-display text-sm font-bold">{clamped}%</span> complete
+      </p>
+    </div>
+  );
+}
 export function ContentCard({
   resource,
   item,
   progress,
+  index = 0,
 }: {
   resource: CatalogResource;
   item: Row;
   progress?: number | null;
+  index?: number;
 }) {
   const config = catalogConfig[resource];
   return (
-    <Card className="flex min-w-0 flex-col p-6">
+    <div
+      className="card-premium card-lift animate-fade-up group flex min-w-0 flex-col p-6 sm:p-7"
+      style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}
+    >
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {[
           text(item, 'category') ||
@@ -80,10 +106,12 @@ export function ContentCard({
         ]
           .filter(Boolean)
           .map((value, i) => (
-            <Badge key={`${value}-${i}`}>{value}</Badge>
+            <Badge key={`${value}-${i}`} className="rounded-full border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
+              {value}
+            </Badge>
           ))}
       </div>
-      <h2 className="text-lg font-semibold tracking-tight">
+      <h2 className="font-display text-xl font-bold tracking-tight">
         {text(item, 'name') || text(item, 'title')}
       </h2>
       {(text(item, 'company') || text(item, 'organizer') || text(item, 'role')) && (
@@ -127,32 +155,26 @@ export function ContentCard({
         {resource === 'projects' && text(item, 'duration') && <p>{text(item, 'duration')}</p>}
       </div>
       {resource === 'tracks' && progress != null && (
-        <div className="mt-4">
-          <div
-            className="h-1.5 overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Progress in ${text(item, 'name') || text(item, 'title')}`}
-          >
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-            />
-          </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">{progress}% complete</p>
+        <div className="mt-5">
+          <ProgressBar
+            value={progress}
+            label={`Progress in ${text(item, 'name') || text(item, 'title')}`}
+          />
         </div>
       )}
       <div className="mt-auto pt-6">
-        <Button asChild variant="outline" className="w-full justify-between">
+        <Button
+          asChild
+          variant="outline"
+          className="w-full justify-between rounded-xl border-border/70 transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10"
+        >
           <Link href={`${config.href}/${item.id}`}>
             View {config.singular}
-            <ArrowRight />
+            <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }
 export function ContentCatalog({ resource }: { resource: CatalogResource }) {
@@ -171,15 +193,32 @@ export function ContentCatalog({ resource }: { resource: CatalogResource }) {
   }
   return (
     <>
-      <PageHeading
-        title={config.title}
-        eyebrow="Explore BuildNext"
-        description={config.description}
-      />
-      <div className="mb-6 max-w-lg">
+      <header className="animate-fade-up relative mb-10 overflow-hidden rounded-3xl border border-border/70 p-8 sm:p-12">
+        <div className="absolute inset-0 bg-grid [mask-image:radial-gradient(ellipse_65%_85%_at_25%_15%,black,transparent)]" />
+        <div
+          aria-hidden
+          className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-indigo-500/20 blur-[110px] dark:bg-indigo-500/25"
+        />
+        <div
+          aria-hidden
+          className="absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-violet-500/15 blur-[110px] dark:bg-violet-500/20"
+        />
+        <div className="relative">
+          <p className="eyebrow mb-3">Explore BuildNext</p>
+          <h1 className="font-display max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
+            {config.title}
+          </h1>
+          <p className="mt-4 max-w-xl leading-7 text-muted-foreground">{config.description}</p>
+        </div>
+      </header>
+      <div className="animate-fade-up relative mb-8 max-w-lg" style={{ animationDelay: '90ms' }}>
         <label htmlFor="content-search" className="sr-only">
           Search {config.title.toLowerCase()}
         </label>
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        />
         <Input
           id="content-search"
           type="search"
@@ -189,6 +228,7 @@ export function ContentCatalog({ resource }: { resource: CatalogResource }) {
             setQuery(e.target.value);
             setPage(1);
           }}
+          className="h-12 rounded-2xl border-border/70 bg-card/70 pl-11 backdrop-blur transition-colors focus-visible:ring-indigo-500/50"
         />
       </div>
       {remote.error ? (
@@ -196,12 +236,13 @@ export function ContentCatalog({ resource }: { resource: CatalogResource }) {
       ) : remote.loading || !remote.data ? (
         <LoadingState />
       ) : remote.data.items.length ? (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {remote.data.items.map((item) => (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {remote.data.items.map((item, i) => (
             <ContentCard
               key={item.id}
               resource={resource}
               item={item}
+              index={i}
               progress={resource === 'tracks' ? trackProgress(item) : null}
             />
           ))}

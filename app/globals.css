@@ -48,6 +48,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family:
+      var(--font-sans),
       ui-sans-serif,
       system-ui,
       -apple-system,
@@ -84,7 +85,23 @@
     accent-color: hsl(var(--primary));
   }
   ::selection {
-    background: hsl(var(--secondary-foreground) / 0.15);
+    background: rgb(129 140 248 / 0.28);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-muted-foreground/25;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+    background-clip: content-box;
   }
 }
 @layer components {
@@ -105,6 +122,97 @@
   }
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground;
+  }
+  /* ---- Premium design system ---- */
+  .font-display {
+    font-family:
+      var(--font-display),
+      var(--font-sans),
+      ui-sans-serif,
+      system-ui,
+      sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-indigo-300 dark:to-violet-300;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+  .card-premium {
+    @apply rounded-2xl border bg-card text-card-foreground;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.04),
+      0 12px 32px -16px rgb(0 0 0 / 0.12);
+  }
+  .dark .card-premium {
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.05),
+      0 16px 40px -20px rgb(0 0 0 / 0.8);
+  }
+  .card-lift {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+  .card-lift:hover {
+    transform: translateY(-4px);
+    border-color: rgb(129 140 248 / 0.4);
+  }
+  .dark .card-lift:hover {
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+      0 24px 56px -20px rgb(99 102 241 / 0.28);
+  }
+  .btn-gradient {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-semibold text-white;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    box-shadow:
+      0 10px 28px -10px rgb(99 102 241 / 0.55),
+      inset 0 1px 0 0 rgb(255 255 255 / 0.22);
+    transition:
+      transform 0.2s ease,
+      filter 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .btn-gradient:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow:
+      0 14px 32px -10px rgb(99 102 241 / 0.65),
+      inset 0 1px 0 0 rgb(255 255 255 / 0.22);
+  }
+  .btn-gradient:active {
+    transform: translateY(0);
+  }
+  .btn-gradient:disabled {
+    opacity: 0.55;
+    transform: none;
+    cursor: not-allowed;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(148 163 184 / 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(148 163 184 / 0.07) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .animate-fade-up {
+    animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .progress-glow {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa);
+    box-shadow: 0 0 12px rgb(139 92 246 / 0.55);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 @media (prefers-reduced-motion: reduce) {
