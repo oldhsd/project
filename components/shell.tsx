@@ -26,16 +26,18 @@ import { Dialog } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { adminConfig, adminSections } from '@/lib/admin-config';
 export type ShellUser = { name: string; role: string } | null;
-const navigation = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/tracks', label: 'Learning tracks', icon: BookOpen },
+const primaryNav = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/tracks', label: 'Courses', icon: BookOpen },
+  { href: '/assessments', label: 'Practice', icon: CheckSquare },
   { href: '/projects', label: 'Projects', icon: FolderOpen },
-  { href: '/assessments', label: 'Assessments', icon: CheckSquare },
+];
+const secondaryNav = [
+  { href: '/certificates', label: 'Certificates', icon: GraduationCap },
   { href: '/events', label: 'Events', icon: CalendarDays },
   { href: '/opportunities', label: 'Opportunities', icon: BriefcaseBusiness },
   { href: '/mentorship', label: 'Mentorship', icon: Users },
-  { href: '/certificates', label: 'My certificates', icon: GraduationCap },
-  { href: '/profile', label: 'My profile', icon: UserRound },
+  { href: '/profile', label: 'Profile', icon: UserRound },
 ];
 export function Brand() {
   return (
@@ -196,18 +198,37 @@ export function Shell({
             ))}
           </>
         ) : (
-          navigation.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={navClass(href)}
-              onClick={() => setOpen(false)}
-              aria-current={pathname === href ? 'page' : undefined}
-            >
-              <Icon className="size-4" />
-              {label}
-            </Link>
-          ))
+          <>
+            {primaryNav.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={navClass(href)}
+                onClick={() => setOpen(false)}
+                aria-current={pathname === href ? 'page' : undefined}
+              >
+                <Icon className="size-4" />
+                {label}
+              </Link>
+            ))}
+            <div className="pt-4">
+              <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                More
+              </p>
+              {secondaryNav.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={navClass(href)}
+                  onClick={() => setOpen(false)}
+                  aria-current={pathname === href ? 'page' : undefined}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </>
         )}
         {!admin && user?.role === 'admin' && (
           <div className="pt-4">
