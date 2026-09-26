@@ -16,13 +16,24 @@ export const passwordSchema = z
 export const safeUrl = z
   .union([
     z.literal(''),
+    // PDFs uploaded from the admin panel are served from /api/files/<id>.
+    z
+      .string()
+      .trim()
+      .regex(/^\/api\/files\/[a-f\d]{24}$/i, 'Upload the file again or use a full URL.'),
     z
       .string()
       .trim()
       .url()
       .max(2048)
       .refine(
-        (v) => ['https:', 'http:'].includes(new URL(v).protocol),
+        (value) => {
+          try {
+            return ['https:', 'http:'].includes(new URL(value).protocol);
+          } catch {
+            return false;
+          }
+        },
         'Use an HTTPS or HTTP URL.'
       ),
   ])
@@ -44,7 +55,13 @@ export const resourceLink = z
       .url()
       .max(2048)
       .refine(
-        (v) => ['https:', 'http:'].includes(new URL(v).protocol),
+        (v) => {
+          try {
+            return ['https:', 'http:'].includes(new URL(v).protocol);
+          } catch {
+            return false;
+          }
+        },
         'Use an HTTPS or HTTP URL.'
       ),
   })

@@ -84,10 +84,6 @@ export const adminConfig: Record<Resource, Definition> = {
       title(),
       reference('trackId', 'Track', 'tracks'),
       field('description', 'Description', { kind: 'textarea' }),
-      field('resources', 'PDFs & resource links', {
-        kind: 'links',
-        hint: 'Add as many PDFs and resource links as this module needs. Each needs a label and a link.',
-      }),
       field('order', 'Display order', { kind: 'number', min: 0, initial: 0 }),
       publication,
     ],

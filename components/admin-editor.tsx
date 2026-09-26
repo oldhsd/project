@@ -127,118 +127,6 @@ function QuestionEditor({
     </fieldset>
   );
 }
-type ResourceLink = { label: string; url: string };
-function LinksEditor({
-  value,
-  onChange,
-}: {
-  value: ResourceLink[];
-  onChange: (value: ResourceLink[]) => void;
-}) {
-  const [rowState, setRowState] = useState<Record<number, { busy: boolean; error: string }>>({});
-  const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
-  function update(index: number, patch: Partial<ResourceLink>) {
-    onChange(value.map((item, i) => (i === index ? { ...item, ...patch } : item)));
-  }
-  async function uploadPdf(index: number, file: File) {
-    setRowState((s) => ({ ...s, [index]: { busy: true, error: '' } }));
-    try {
-      const form = new FormData();
-      form.append('file', file);
-      const result = await api<{ url: string; label: string }>('/api/admin/uploads', {
-        method: 'POST',
-        body: form,
-      });
-      onChange(
-        value.map((item, i) =>
-          i === index ? { label: item.label || result.label, url: result.url } : item
-        )
-      );
-      setRowState((s) => ({ ...s, [index]: { busy: false, error: '' } }));
-    } catch (error) {
-      setRowState((s) => ({
-        ...s,
-        [index]: { busy: false, error: error instanceof ClientError ? error.message : 'Upload failed.' },
-      }));
-    }
-  }
-  return (
-    <fieldset className="space-y-4">
-      <legend className="mb-2 text-sm font-medium">PDFs & resource links</legend>
-      {value.map((item, index) => (
-        <div key={index} className="flex flex-col gap-2 rounded-lg border p-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-            <div className="grid flex-1 gap-2 sm:grid-cols-2">
-              <Input
-                aria-label={`Label for link ${index + 1}`}
-                placeholder="Label, e.g. Lecture slides (PDF)"
-                required
-                value={item.label}
-                onChange={(e) => update(index, { label: e.target.value })}
-              />
-              <Input
-                aria-label={`URL for link ${index + 1}`}
-                type="text"
-                inputMode="url"
-                placeholder="Paste a link, or upload a PDF below…"
-                required
-                value={item.url}
-                onChange={(e) => update(index, { url: e.target.value })}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Remove link ${index + 1}`}
-              onClick={() => onChange(value.filter((_, i) => i !== index))}
-            >
-              <Trash2 />
-            </Button>
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              ref={(el) => {
-                fileInputs.current[index] = el;
-              }}
-              type="file"
-              accept="application/pdf"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = '';
-                if (file) void uploadPdf(index, file);
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={rowState[index]?.busy}
-              onClick={() => fileInputs.current[index]?.click()}
-            >
-              <Upload />
-              {rowState[index]?.busy ? 'Uploading…' : 'Upload PDF from computer'}
-            </Button>
-            {rowState[index]?.error && (
-              <span className="text-sm text-destructive">{rowState[index].error}</span>
-            )}
-          </div>
-        </div>
-      ))}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={value.length >= 50}
-        onClick={() => onChange([...value, { label: '', url: '' }])}
-      >
-        <Plus />
-        Add PDF / resource link
-      </Button>
-    </fieldset>
-  );
-}
 function PdfUploadEditor({
   value,
   onChange,
@@ -605,11 +493,7 @@ function initialValues(resource: Resource, record: Row | null): Record<string, u
     const value =
       record?.[field.key] ??
       field.initial ??
-      (field.kind === 'checkbox'
-        ? false
-        : field.kind === 'questions' || field.kind === 'links'
-          ? []
-          : '');
+      (field.kind === 'checkbox' ? false : field.kind === 'questions' ? [] : '');
     values[field.key] =
       field.kind === 'lines'
         ? Array.isArray(value)
@@ -776,10 +660,6 @@ export function AdminEditor({
             if (field.kind === 'questions')
               return (
                 <QuestionEditor key={field.key} value={value as Question[]} onChange={change} />
-              );
-            if (field.kind === 'links')
-              return (
-                <LinksEditor key={field.key} value={value as ResourceLink[]} onChange={change} />
               );
             if (field.kind === 'pdf-upload')
               return (

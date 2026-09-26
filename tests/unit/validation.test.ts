@@ -34,6 +34,17 @@ test('unsafe URL schemes are rejected', () => {
     assert.equal(safeUrl.safeParse(value).success, false);
   assert.equal(safeUrl.safeParse('https://example.org/a').success, true);
 });
+test('uploaded file URLs are accepted and never throw a raw TypeError', () => {
+  // Regression: /api/files/<id> must pass so the Add Content dialog can save
+  // an uploaded PDF, and invalid input must stay a ZodError (400), not a 503.
+  const uploaded = safeUrl.safeParse('/api/files/68d5f2a1b3c4d5e6f708192a');
+  assert.equal(uploaded.success, true);
+  for (const value of ['not-a-url', '/api/files/../../etc/passwd', '/other/path']) {
+    const parsed = safeUrl.safeParse(value);
+    assert.equal(parsed.success, false);
+  }
+  assert.equal(safeUrl.safeParse('').success, true);
+});
 test('identifiers reject object and operator injection', () => {
   for (const value of ['', { $ne: null }, 'not-an-id', 'a'.repeat(25)])
     assert.equal(objectId.safeParse(value).success, false);
