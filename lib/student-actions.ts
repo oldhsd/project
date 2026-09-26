@@ -32,6 +32,15 @@ export async function completeLesson(user: DbRow, id: string) {
   if (!result) throw new ApiError(409, 'Enroll in this track before recording progress.');
   return row(result);
 }
+export async function uncompleteLesson(user: DbRow, id: string) {
+  const lesson = await getRecord('lessons', id);
+  const parentModule = await db.modules.findById(lesson.moduleId).lean();
+  await Enrollment.findOneAndUpdate(
+    { userId: user._id, trackId: String(parentModule!.trackId) },
+    { $pull: { completedLessonIds: new Types.ObjectId(id) } }
+  ).lean<DbRow>();
+  return { ok: true };
+}
 export async function apply(user: DbRow, id: string, input: unknown) {
   z.object({ consent: z.literal(true) })
     .strict()

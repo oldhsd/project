@@ -50,26 +50,26 @@ function LessonDoneCheckbox({
   done,
   canSave,
   saveHint,
-  onSaved,
+  onToggled,
   onError,
 }: {
   lessonId: string;
   done: boolean;
   canSave: boolean;
   saveHint: string;
-  onSaved: () => void;
+  onToggled: (done: boolean) => void;
   onError: (message: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
-  async function markDone() {
-    if (done || busy || !canSave) return;
+  async function toggle() {
+    if (busy || !canSave) return;
     setBusy(true);
     try {
       await api(`/api/lessons/${lessonId}/complete`, {
-        method: 'POST',
+        method: done ? 'DELETE' : 'POST',
         body: JSON.stringify({}),
       });
-      onSaved();
+      onToggled(!done);
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Could not save. Please try again.');
     } finally {
@@ -80,11 +80,11 @@ function LessonDoneCheckbox({
     <input
       type="checkbox"
       className="size-5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-      aria-label="Mark lesson done"
+      aria-label={done ? 'Mark lesson not done' : 'Mark lesson done'}
       title={saveHint}
       checked={done}
-      disabled={done || busy || !canSave}
-      onChange={markDone}
+      disabled={busy || !canSave}
+      onChange={toggle}
     />
   );
 }
@@ -147,6 +147,8 @@ function LessonResourcesTable({
   );
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; message: string } | null>(null);
   const [enrolling, setEnrolling] = useState(false);
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  const isDone = (id: string) => toggled[id] ?? completedIds.has(id);
 
   async function enroll() {
     if (enrolling || !signedIn) return;
@@ -169,7 +171,7 @@ function LessonResourcesTable({
   }
 
   function saveHint(done: boolean) {
-    if (done) return 'Lesson completed';
+    if (done) return 'Lesson completed — click to unmark';
     if (!signedIn) return 'Sign in to save your progress';
     if (account.loading) return 'Checking your account…';
     if (!enrolled) return 'Enroll in this track to save your progress';
@@ -254,12 +256,16 @@ function LessonResourcesTable({
                 <td className="px-4 py-3 text-center">
                   <LessonDoneCheckbox
                     lessonId={lesson.id}
-                    done={completedIds.has(String(lesson.id))}
+                    done={isDone(String(lesson.id))}
                     canSave={signedIn && enrolled && !account.loading}
-                    saveHint={saveHint(completedIds.has(String(lesson.id)))}
-                    onSaved={() => {
+                    saveHint={saveHint(isDone(String(lesson.id)))}
+                    onToggled={(next) => {
+                      setToggled((previous) => ({ ...previous, [String(lesson.id)]: next }));
                       account.reload();
-                      setNotice({ kind: 'ok', message: 'Lesson marked as done.' });
+                      setNotice({
+                        kind: 'ok',
+                        message: next ? 'Lesson marked as done.' : 'Lesson marked as not done.',
+                      });
                     }}
                     onError={(message) => setNotice({ kind: 'err', message })}
                   />

@@ -37,6 +37,21 @@ export function StudentAction({
       setBusy(false);
     }
   }
+  async function toggleLesson(url: string, done: boolean, message: string) {
+    setBusy(true);
+    setError('');
+    setSuccess('');
+    try {
+      await api(url, { method: done ? 'DELETE' : 'POST', body: JSON.stringify({}) });
+      setSuccess(message);
+      account.reload();
+      announceContentChange();
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   const path = resource === 'lessons' ? '/lessons' : `/${resource}`;
   if (status === 'loading')
     return (
@@ -113,12 +128,17 @@ export function StudentAction({
       )}
       {resource === 'lessons' && (
         <Button
-          disabled={waiting || !!lessonDone}
+          disabled={waiting}
+          variant={lessonDone ? 'outline' : 'default'}
           onClick={() =>
-            void act(`/api/lessons/${item.id}/complete`, {}, 'Lesson completion saved.')
+            void toggleLesson(
+              `/api/lessons/${item.id}/complete`,
+              !!lessonDone,
+              lessonDone ? 'Lesson marked as not done.' : 'Lesson completion saved.'
+            )
           }
         >
-          {lessonDone ? 'Lesson completed' : busy ? 'Saving…' : 'Mark lesson complete'}
+          {lessonDone ? 'Completed — click to unmark' : busy ? 'Saving…' : 'Mark lesson complete'}
         </Button>
       )}
       {resource === 'events' && (
