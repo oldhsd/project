@@ -12,10 +12,10 @@ import {
 import { api, useRemote } from '@/lib/client';
 import { type Row, text, number, list } from '@/lib/content-schema';
 import { dateLabel } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { catalogConfig, type CatalogResource } from '@/components/content-catalog';
 import { StudentAction } from '@/components/student-actions';
 import { AssessmentRunner } from '@/components/assessment-runner';
-import { Button } from '@/components/ui/button';
 import type { AccountData } from '@/lib/view-types';
 import {
   Badge,
@@ -45,26 +45,33 @@ function Items({ title, items }: { title: string; items: string[] }) {
     </section>
   ) : null;
 }
-function LessonDoneCheckbox({ lessonId }: { lessonId: string }) {
-  const { status } = useSession();
-  const account = useRemote<AccountData>(status === 'authenticated' ? '/api/me' : null, 0);
+function LessonDoneCheckbox({
+  lessonId,
+  done,
+  canSave,
+  saveHint,
+  onSaved,
+  onError,
+}: {
+  lessonId: string;
+  done: boolean;
+  canSave: boolean;
+  saveHint: string;
+  onSaved: () => void;
+  onError: (message: string) => void;
+}) {
   const [busy, setBusy] = useState(false);
-  const done = !!account.data?.enrollments.some(
-    (enrollment) =>
-      Array.isArray(enrollment.completedLessonIds) &&
-      (enrollment.completedLessonIds as unknown[]).map(String).includes(lessonId)
-  );
   async function markDone() {
-    if (done || busy || status !== 'authenticated') return;
+    if (done || busy || !canSave) return;
     setBusy(true);
     try {
       await api(`/api/lessons/${lessonId}/complete`, {
         method: 'POST',
         body: JSON.stringify({}),
       });
-      account.reload();
-    } catch {
-      // The lesson page surfaces save errors; keep the checkbox unchanged here.
+      onSaved();
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Could not save. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -72,10 +79,11 @@ function LessonDoneCheckbox({ lessonId }: { lessonId: string }) {
   return (
     <input
       type="checkbox"
-      className="size-4 cursor-pointer disabled:cursor-default disabled:opacity-70"
+      className="size-5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
       aria-label="Mark lesson done"
+      title={saveHint}
       checked={done}
-      disabled={done || busy || status !== 'authenticated' || account.loading}
+      disabled={done || busy || !canSave}
       onChange={markDone}
     />
   );
@@ -118,13 +126,77 @@ function LessonResourcesTable({
   lessons,
   resources,
   category,
+  trackId,
 }: {
   lessons: Row[];
   resources: ModuleResource[];
   category: string;
+  trackId: string;
 }) {
+  const { status } = useSession();
+  const account = useRemote<AccountData>(status === 'authenticated' ? '/api/me' : null, 0);
+  const signedIn = status === 'authenticated';
+  const enrollments = account.data?.enrollments ?? [];
+  const enrolled = enrollments.some((e) => String(e.trackId) === String(trackId));
+  const completedIds = new Set(
+    enrollments.flatMap((e) =>
+      Array.isArray(e.completedLessonIds)
+        ? (e.completedLessonIds as unknown[]).map(String)
+        : []
+    )
+  );
+  const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; message: string } | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
+
+  async function enroll() {
+    if (enrolling || !signedIn) return;
+    setEnrolling(true);
+    try {
+      await api('/api/enrollments', {
+        method: 'POST',
+        body: JSON.stringify({ trackId }),
+      });
+      account.reload();
+      setNotice({ kind: 'ok', message: 'You are enrolled — your progress will now be saved.' });
+    } catch (error) {
+      setNotice({
+        kind: 'err',
+        message: error instanceof Error ? error.message : 'Could not enroll. Please try again.',
+      });
+    } finally {
+      setEnrolling(false);
+    }
+  }
+
+  function saveHint(done: boolean) {
+    if (done) return 'Lesson completed';
+    if (!signedIn) return 'Sign in to save your progress';
+    if (account.loading) return 'Checking your account…';
+    if (!enrolled) return 'Enroll in this track to save your progress';
+    return 'Mark lesson done';
+  }
+
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div>
+      {signedIn && !account.loading && !enrolled && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-dashed p-4">
+          <p className="text-sm text-muted-foreground">
+            Enroll in this track to save your lesson progress.
+          </p>
+          <Button size="sm" disabled={enrolling} onClick={enroll}>
+            {enrolling ? 'Enrolling…' : 'Enroll in track'}
+          </Button>
+        </div>
+      )}
+      {notice && (
+        <p
+          role={notice.kind === 'err' ? 'alert' : 'status'}
+          className={`mb-4 text-sm ${notice.kind === 'err' ? 'text-destructive' : 'text-muted-foreground'}`}
+        >
+          {notice.message}
+        </p>
+      )}
+      <div className="overflow-x-auto rounded-md border">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
@@ -180,13 +252,24 @@ function LessonResourcesTable({
                   {pdfUrl ? <PdfButton url={pdfUrl} /> : tableDash}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <LessonDoneCheckbox lessonId={lesson.id} />
+                  <LessonDoneCheckbox
+                    lessonId={lesson.id}
+                    done={completedIds.has(String(lesson.id))}
+                    canSave={signedIn && enrolled && !account.loading}
+                    saveHint={saveHint(completedIds.has(String(lesson.id)))}
+                    onSaved={() => {
+                      account.reload();
+                      setNotice({ kind: 'ok', message: 'Lesson marked as done.' });
+                    }}
+                    onError={(message) => setNotice({ kind: 'err', message })}
+                  />
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -270,9 +353,9 @@ export function ContentDetail({
             <section>
               <h2 className="mb-5 text-xl font-semibold">Curriculum</h2>
               {modules.length ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {modules.map((module, index) => (
-                    <Card key={module.id} className="p-6">
+                    <Card key={module.id} className="p-6 sm:p-8">
                       <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         Module {index + 1}
                       </p>
@@ -307,6 +390,7 @@ export function ContentDetail({
                                 lessons={module.lessons}
                                 resources={moduleResources}
                                 category={text(item, 'category')}
+                                trackId={item.id}
                               />
                             ) : (
                               <p className="rounded-md border p-4 text-sm text-muted-foreground">

@@ -2,10 +2,11 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRemote } from '@/lib/client';
 import { text, number, type Resource, type Row } from '@/lib/content-schema';
 import { dateLabel } from '@/lib/utils';
-import type { Collection } from '@/lib/view-types';
+import type { AccountData, Collection } from '@/lib/view-types';
 import { Button } from '@/components/ui/button';
 import {
   Badge,
@@ -57,7 +58,15 @@ export const catalogConfig = {
   },
 };
 export type CatalogResource = keyof typeof catalogConfig;
-export function ContentCard({ resource, item }: { resource: CatalogResource; item: Row }) {
+export function ContentCard({
+  resource,
+  item,
+  progress,
+}: {
+  resource: CatalogResource;
+  item: Row;
+  progress?: number | null;
+}) {
   const config = catalogConfig[resource];
   return (
     <Card className="flex min-w-0 flex-col p-6">
@@ -117,6 +126,24 @@ export function ContentCard({ resource, item }: { resource: CatalogResource; ite
         )}
         {resource === 'projects' && text(item, 'duration') && <p>{text(item, 'duration')}</p>}
       </div>
+      {resource === 'tracks' && progress != null && (
+        <div className="mt-4">
+          <div
+            className="h-1.5 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Progress in ${text(item, 'name') || text(item, 'title')}`}
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">{progress}% complete</p>
+        </div>
+      )}
       <div className="mt-auto pt-6">
         <Button asChild variant="outline" className="w-full justify-between">
           <Link href={`${config.href}/${item.id}`}>
@@ -135,6 +162,13 @@ export function ContentCatalog({ resource }: { resource: CatalogResource }) {
   const remote = useRemote<Collection>(
     `/api/content/${resource}?page=${page}&q=${encodeURIComponent(query)}`
   );
+  const { status } = useSession();
+  const account = useRemote<AccountData>(status === 'authenticated' ? '/api/me' : null, 0);
+  const enrollments = account.data?.enrollments;
+  function trackProgress(item: Row): number | null {
+    const found = enrollments?.find((e) => String(e.trackId) === String(item.id));
+    return found ? number(found, 'progress') : null;
+  }
   return (
     <>
       <PageHeading
@@ -164,7 +198,12 @@ export function ContentCatalog({ resource }: { resource: CatalogResource }) {
       ) : remote.data.items.length ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {remote.data.items.map((item) => (
-            <ContentCard key={item.id} resource={resource} item={item} />
+            <ContentCard
+              key={item.id}
+              resource={resource}
+              item={item}
+              progress={resource === 'tracks' ? trackProgress(item) : null}
+            />
           ))}
         </div>
       ) : (
