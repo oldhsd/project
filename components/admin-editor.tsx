@@ -316,12 +316,26 @@ function AddContentDialog({
     </Dialog>
   );
 }
-function ModuleContentManager({ moduleId }: { moduleId: string }) {
+type ModuleLink = { label?: string; url?: string };
+function ModuleContentManager({
+  moduleId,
+  initialResources,
+  version,
+  onResourcesChanged,
+}: {
+  moduleId: string;
+  initialResources: ModuleLink[];
+  version: number;
+  onResourcesChanged: (resources: ModuleLink[], newVersion: number) => void;
+}) {
   const lessons = useRemote<{ items: Row[] }>(
     `/api/admin/content/lessons?moduleId=${moduleId}&limit=100`
   );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [resources, setResources] = useState<ModuleLink[]>(initialResources);
+  const [removingLink, setRemovingLink] = useState<number | null>(null);
+  const [linkError, setLinkError] = useState('');
   const [error, setError] = useState('');
   const items = lessons.data?.items ?? [];
   const nextOrder = items.reduce((max, item) => Math.max(max, number(item, 'order')), -1) + 1;
@@ -340,6 +354,25 @@ function ModuleContentManager({ moduleId }: { moduleId: string }) {
       setError(err instanceof ClientError ? err.message : 'Could not delete this lecture.');
     } finally {
       setDeleting(null);
+    }
+  }
+
+  async function removeLink(index: number) {
+    if (removingLink !== null) return;
+    setRemovingLink(index);
+    setLinkError('');
+    try {
+      const next = resources.filter((_, i) => i !== index);
+      const updated = await api<{ item: Row }>(`/api/admin/content/modules/${moduleId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ version, resources: next }),
+      });
+      setResources(next);
+      onResourcesChanged(next, updated.item.version);
+    } catch (err) {
+      setLinkError(err instanceof ClientError ? err.message : 'Could not delete this link.');
+    } finally {
+      setRemovingLink(null);
     }
   }
 
@@ -398,6 +431,43 @@ function ModuleContentManager({ moduleId }: { moduleId: string }) {
         <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
           No content yet. Click “Add Content” to add the first lecture.
         </p>
+      )}
+      {resources.length > 0 && (
+        <div className="mt-6">
+          <h4 className="text-sm font-semibold">Resource links</h4>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Older video or PDF links attached directly to this module. Delete the ones you no
+            longer want — they disappear from the track table immediately.
+          </p>
+          <ul className="mt-3 divide-y rounded-md border">
+            {resources.map((link, index) => (
+              <li key={index} className="flex items-center gap-3 px-4 py-3 text-sm">
+                <span className="w-6 shrink-0 text-xs text-muted-foreground">{index + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{link.label || link.url}</span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                    {link.url}
+                  </span>
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Delete resource ${link.label || link.url}`}
+                  disabled={removingLink === index}
+                  onClick={() => void removeLink(index)}
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            ))}
+          </ul>
+          {linkError && (
+            <p role="alert" className="mt-3 text-sm text-destructive">
+              {linkError}
+            </p>
+          )}
+        </div>
       )}
       {error && (
         <p role="alert" className="mt-3 text-sm text-destructive">
@@ -523,6 +593,9 @@ export function AdminEditor({
   const [values, setValues] = useState<Record<string, unknown>>(() =>
     initialValues(resource, record)
   );
+  // Bumped whenever the module's resource links are changed from inside the editor,
+  // so a later "Save changes" never hits a stale-version conflict.
+  const [liveVersion, setLiveVersion] = useState(record?.version ?? 0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ClientError | null>(null);
   const [revoke, setRevoke] = useState(false);
@@ -563,7 +636,7 @@ export function AdminEditor({
                   : ''
                 : (value ?? '');
       }
-      if (record) data.version = record.version;
+      if (record) data.version = liveVersion;
       await api(`/api/admin/content/${resource}${record ? `/${record.id}` : ''}`, {
         method: record ? 'PATCH' : 'POST',
         body: JSON.stringify(data),
@@ -777,7 +850,14 @@ export function AdminEditor({
         </fieldset>
         {resource === 'modules' &&
           (record ? (
-            <ModuleContentManager moduleId={record.id} />
+            <ModuleContentManager
+              moduleId={record.id}
+              initialResources={
+                Array.isArray(record.resources) ? (record.resources as ModuleLink[]) : []
+              }
+              version={liveVersion}
+              onResourcesChanged={(_, newVersion) => setLiveVersion(newVersion)}
+            />
           ) : (
             <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
               Save this module first, then add its lectures with “Add Content”.
