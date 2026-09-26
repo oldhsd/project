@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Upload } from 'lucide-react';
 import { api, ClientError, useRemote } from '@/lib/client';
 import { adminConfig, type EditorField } from '@/lib/admin-config';
 import { text, type Resource, type Row } from '@/lib/content-schema';
@@ -135,40 +135,94 @@ function LinksEditor({
   value: ResourceLink[];
   onChange: (value: ResourceLink[]) => void;
 }) {
+  const [rowState, setRowState] = useState<Record<number, { busy: boolean; error: string }>>({});
+  const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
   function update(index: number, patch: Partial<ResourceLink>) {
     onChange(value.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  }
+  async function uploadPdf(index: number, file: File) {
+    setRowState((s) => ({ ...s, [index]: { busy: true, error: '' } }));
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const result = await api<{ url: string; label: string }>('/api/admin/uploads', {
+        method: 'POST',
+        body: form,
+      });
+      onChange(
+        value.map((item, i) =>
+          i === index ? { label: item.label || result.label, url: result.url } : item
+        )
+      );
+      setRowState((s) => ({ ...s, [index]: { busy: false, error: '' } }));
+    } catch (error) {
+      setRowState((s) => ({
+        ...s,
+        [index]: { busy: false, error: error instanceof ClientError ? error.message : 'Upload failed.' },
+      }));
+    }
   }
   return (
     <fieldset className="space-y-4">
       <legend className="mb-2 text-sm font-medium">PDFs & resource links</legend>
       {value.map((item, index) => (
-        <div key={index} className="flex flex-col gap-2 rounded-lg border p-4 sm:flex-row sm:items-start">
-          <div className="grid flex-1 gap-2 sm:grid-cols-2">
-            <Input
-              aria-label={`Label for link ${index + 1}`}
-              placeholder="Label, e.g. Lecture slides (PDF)"
-              required
-              value={item.label}
-              onChange={(e) => update(index, { label: e.target.value })}
-            />
-            <Input
-              aria-label={`URL for link ${index + 1}`}
-              type="url"
-              placeholder="https://…"
-              required
-              value={item.url}
-              onChange={(e) => update(index, { url: e.target.value })}
-            />
+        <div key={index} className="flex flex-col gap-2 rounded-lg border p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <div className="grid flex-1 gap-2 sm:grid-cols-2">
+              <Input
+                aria-label={`Label for link ${index + 1}`}
+                placeholder="Label, e.g. Lecture slides (PDF)"
+                required
+                value={item.label}
+                onChange={(e) => update(index, { label: e.target.value })}
+              />
+              <Input
+                aria-label={`URL for link ${index + 1}`}
+                type="url"
+                placeholder="Paste a link, or upload a PDF below…"
+                required
+                value={item.url}
+                onChange={(e) => update(index, { url: e.target.value })}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Remove link ${index + 1}`}
+              onClick={() => onChange(value.filter((_, i) => i !== index))}
+            >
+              <Trash2 />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Remove link ${index + 1}`}
-            onClick={() => onChange(value.filter((_, i) => i !== index))}
-          >
-            <Trash2 />
-          </Button>
+          <div className="flex items-center gap-3">
+            <input
+              ref={(el) => {
+                fileInputs.current[index] = el;
+              }}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (file) void uploadPdf(index, file);
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={rowState[index]?.busy}
+              onClick={() => fileInputs.current[index]?.click()}
+            >
+              <Upload />
+              {rowState[index]?.busy ? 'Uploading…' : 'Upload PDF from computer'}
+            </Button>
+            {rowState[index]?.error && (
+              <span className="text-sm text-destructive">{rowState[index].error}</span>
+            )}
+          </div>
         </div>
       ))}
       <Button

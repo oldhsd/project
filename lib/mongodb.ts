@@ -31,3 +31,9 @@ export async function connectDB() {
     cache.promise = null;
   }
 }
+
+/** Stores/serves uploaded files (e.g. module PDFs) directly in MongoDB — no third-party storage needed. */
+export async function gridFsBucket(bucketName = 'resourceFiles') {
+  const conn = await connectDB();
+  return new mongoose.mongo.GridFSBucket(conn.connection.db!, { bucketName });
+}

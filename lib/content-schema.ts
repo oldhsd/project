@@ -167,7 +167,7 @@ export const resourceSchemas = {
       name: title,
       email: emailSchema,
       stream: short,
-      year: z.number().int().min(1).max(10).default(1),
+      year: z.number().int().min(1).max(4).default(1),
       bio: z.string().trim().max(2000).default(''),
       interests: lines,
       github: safeUrl,

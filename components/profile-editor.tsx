@@ -12,6 +12,7 @@ import {
   Input,
   LoadingState,
   PageHeading,
+  Select,
   Textarea,
 } from '@/components/ui/primitives';
 function Editor({ profile }: { profile: Row }) {
@@ -84,15 +85,13 @@ function Editor({ profile }: { profile: Row }) {
           />
         </Field>
         <Field htmlFor="profile-year" label="Study year">
-          <Input
-            id="profile-year"
-            name="year"
-            type="number"
-            min={1}
-            max={10}
-            required
-            defaultValue={number(profile, 'year') || 1}
-          />
+          <Select id="profile-year" name="year" defaultValue={number(profile, 'year') || 1}>
+            {Array.from({ length: 4 }, (_, i) => (
+              <option key={i} value={i + 1}>
+                Year {i + 1}
+              </option>
+            ))}
+          </Select>
         </Field>
       </div>
       <Field htmlFor="profile-bio" label="About you">

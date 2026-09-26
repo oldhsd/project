@@ -42,12 +42,11 @@ const secondaryNav = [
 export function Brand() {
   return (
     <Link href="/" className="inline-flex items-center gap-2.5 font-semibold tracking-tight">
-      <span
-        aria-hidden="true"
-        className="grid size-8 place-items-center rounded-md bg-orange-700 text-xs font-bold text-white"
-      >
-        BN
-      </span>
+      <img
+        src="/images/buildnext-logo.png"
+        alt="BuildNext Community"
+        className="size-8 rounded-md object-cover"
+      />
       <span>BuildNext</span>
     </Link>
   );

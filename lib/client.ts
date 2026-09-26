@@ -16,7 +16,9 @@ export async function api<T>(url: string, options: RequestInit = {}): Promise<T>
       ...options,
       cache: 'no-store',
       headers: {
-        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(options.body && !(options.body instanceof FormData)
+          ? { 'Content-Type': 'application/json' }
+          : {}),
         ...options.headers,
       },
     });

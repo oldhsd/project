@@ -75,7 +75,7 @@ export function AuthForm({
             </Field>
             <Field htmlFor="year" label="Study year">
               <Select id="year" name="year">
-                {Array.from({ length: 10 }, (_, i) => (
+                {Array.from({ length: 4 }, (_, i) => (
                   <option key={i} value={i + 1}>
                     Year {i + 1}
                   </option>
