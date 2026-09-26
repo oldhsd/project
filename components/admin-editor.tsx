@@ -3,9 +3,9 @@ import { useRef, useState } from 'react';
 import { FileText, Plus, Trash2, Upload } from 'lucide-react';
 import { api, ClientError, useRemote } from '@/lib/client';
 import { adminConfig, type EditorField } from '@/lib/admin-config';
-import { text, type Resource, type Row } from '@/lib/content-schema';
+import { text, number, type Resource, type Row } from '@/lib/content-schema';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/dialog';
+import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { Field, Input, Select, Textarea } from '@/components/ui/primitives';
 
 type Question = { question: string; options: string[]; correctIndex: number; explanation: string };
@@ -316,6 +316,217 @@ function PdfUploadEditor({
         {error && <span className="text-sm text-destructive">{error}</span>}
       </div>
     </div>
+  );
+}
+function AddContentDialog({
+  moduleId,
+  order,
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  moduleId: string;
+  order: number;
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  function close() {
+    if (!busy) onOpenChange(false);
+  }
+
+  async function save() {
+    const name = title.trim();
+    if (name.length < 2) {
+      setError('Lecture name must be at least 2 characters.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      await api('/api/admin/content/lessons', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: name,
+          moduleId,
+          body: name,
+          videoUrl: videoUrl.trim(),
+          pdfUrl,
+          status: 'published',
+          order,
+        }),
+      });
+      setTitle('');
+      setVideoUrl('');
+      setPdfUrl('');
+      onSaved();
+    } catch (err) {
+      setError(err instanceof ClientError ? err.message : 'Could not add content.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Add content"
+      description="Add a lecture to this module. It appears as a row in the track curriculum table."
+      busy={busy}
+    >
+      <div className="space-y-5">
+        <Field label="Lecture name" htmlFor="content-title">
+          <Input
+            id="content-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Introduction to Java"
+            autoComplete="off"
+          />
+        </Field>
+        <Field
+          label="Video link"
+          htmlFor="content-video"
+          hint="Paste the lecture video link, e.g. a YouTube URL."
+        >
+          <Input
+            id="content-video"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder="https://…"
+            autoComplete="off"
+          />
+        </Field>
+        <Field
+          label="PDF"
+          htmlFor="content-pdf"
+          hint="Upload a PDF from your computer. No link is needed."
+        >
+          <PdfUploadEditor value={pdfUrl} onChange={setPdfUrl} />
+        </Field>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" disabled={busy} onClick={close}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => void save()}>
+            {busy ? 'Adding…' : 'Add content'}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+function ModuleContentManager({ moduleId }: { moduleId: string }) {
+  const lessons = useRemote<{ items: Row[] }>(
+    `/api/admin/content/lessons?moduleId=${moduleId}&limit=100`
+  );
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const items = lessons.data?.items ?? [];
+  const nextOrder = items.reduce((max, item) => Math.max(max, number(item, 'order')), -1) + 1;
+
+  async function remove(item: Row) {
+    if (deleting) return;
+    setDeleting(item.id);
+    setError('');
+    try {
+      await api(`/api/admin/content/lessons/${item.id}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ version: item.version }),
+      });
+      lessons.reload();
+    } catch (err) {
+      setError(err instanceof ClientError ? err.message : 'Could not delete this lecture.');
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  return (
+    <section className="rounded-lg border p-4 sm:p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">Module content</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Lectures added here appear as rows in the track curriculum table — each with its
+            video link and PDF.
+          </p>
+        </div>
+        <Button type="button" size="sm" onClick={() => setDialogOpen(true)}>
+          <Plus />
+          Add Content
+        </Button>
+      </div>
+      {lessons.loading ? (
+        <p className="text-sm text-muted-foreground">Loading content…</p>
+      ) : lessons.error ? (
+        <p className="text-sm text-destructive">
+          {lessons.error.message}{' '}
+          <button type="button" className="underline" onClick={lessons.reload}>
+            Retry
+          </button>
+        </p>
+      ) : items.length ? (
+        <ul className="divide-y rounded-md border">
+          {items.map((item, index) => (
+            <li key={item.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+              <span className="w-6 shrink-0 text-xs text-muted-foreground">{index + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{text(item, 'title')}</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {text(item, 'videoUrl') ? 'Video added' : 'No video'}
+                  {' · '}
+                  {text(item, 'pdfUrl') ? 'PDF added' : 'No PDF'}
+                  {text(item, 'status') !== 'published' ? ' · Draft' : ''}
+                </span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Delete ${text(item, 'title')}`}
+                disabled={deleting === item.id}
+                onClick={() => void remove(item)}
+              >
+                <Trash2 />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+          No content yet. Click “Add Content” to add the first lecture.
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <AddContentDialog
+        moduleId={moduleId}
+        order={nextOrder}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSaved={() => {
+          setDialogOpen(false);
+          lessons.reload();
+        }}
+      />
+    </section>
   );
 }
 function ReferenceSelect({
@@ -684,6 +895,14 @@ export function AdminEditor({
             );
           })}
         </fieldset>
+        {resource === 'modules' &&
+          (record ? (
+            <ModuleContentManager moduleId={record.id} />
+          ) : (
+            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+              Save this module first, then add its lectures with “Add Content”.
+            </p>
+          ))}
         <div className="flex flex-wrap justify-end gap-2 border-t bg-background pt-5">
           <Button type="button" variant="outline" disabled={busy} onClick={cancel}>
             Cancel
