@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, BookOpen, Paperclip } from 'lucide-react';
 import { useRemote } from '@/lib/client';
 import { type Row, text, number, list } from '@/lib/content-schema';
 import { dateLabel } from '@/lib/utils';
@@ -127,6 +127,27 @@ export function ContentDetail({
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">
                           {text(module, 'description')}
                         </p>
+                      )}
+                      {Array.isArray(module.resources) && module.resources.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {(module.resources as { label?: unknown; url?: unknown }[]).map(
+                            (link, i) =>
+                              typeof link.url === 'string' && link.url ? (
+                                <a
+                                  key={i}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                                >
+                                  <Paperclip className="size-3.5 shrink-0" />
+                                  {typeof link.label === 'string' && link.label
+                                    ? link.label
+                                    : 'Resource'}
+                                </a>
+                              ) : null
+                          )}
+                        </div>
                       )}
                       <div className="mt-5 divide-y rounded-md border">
                         {module.lessons.length ? (

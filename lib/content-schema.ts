@@ -35,6 +35,21 @@ const dateOnly = z
     (v) => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v,
     'Enter a valid date.'
   );
+export const resourceLink = z
+  .object({
+    label: z.string().trim().min(1).max(180),
+    url: z
+      .string()
+      .trim()
+      .url()
+      .max(2048)
+      .refine(
+        (v) => ['https:', 'http:'].includes(new URL(v).protocol),
+        'Use an HTTPS or HTTP URL.'
+      ),
+  })
+  .strict();
+const resourceLinks = z.array(resourceLink).max(50).default([]);
 const question = z
   .object({
     question: description,
@@ -63,6 +78,7 @@ export const resourceSchemas = {
       title,
       trackId: objectId,
       description: z.string().trim().max(12000).default(''),
+      resources: resourceLinks,
       order: integer.default(0),
       status: publication,
     })

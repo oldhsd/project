@@ -104,7 +104,13 @@ async function decorate(resource: Resource, records: DbRow[], admin: boolean): P
       ['projectId', 'projects', 'project'],
     ];
     for (const [key, target, label] of relations) {
-      const references = [...new Set(result.map((r) => String(r[key] || '')).filter(Boolean))];
+      const references = [
+        ...new Set(
+          result
+            .map((r) => String(r[key] || ''))
+            .filter((v) => v && objectId.safeParse(v).success)
+        ),
+      ];
       if (!references.length) continue;
       const related = await db[target]
         .find({ _id: { $in: references } })
@@ -486,9 +492,9 @@ export async function accountSummary(user: DbRow) {
     ]);
   const courses = await Promise.all(
     enrollments.map(async (e) => {
-      const track = await db.tracks.findById(e.trackId).select('name status').lean();
-      const lessons =
-        track?.status === 'published' ? await publishedLessonIds(String(e.trackId)) : [];
+      const trackId = objectId.safeParse(e.trackId).success ? String(e.trackId) : null;
+      const track = trackId ? await db.tracks.findById(trackId).select('name status').lean() : null;
+      const lessons = track?.status === 'published' ? await publishedLessonIds(trackId!) : [];
       const complete = ((e.completedLessonIds as unknown[]) || [])
         .map(String)
         .filter((id) => lessons.includes(id));

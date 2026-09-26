@@ -80,6 +80,16 @@ export const db: Record<Resource, Model<DbRow>> = {
       title: required,
       trackId: ref('Track'),
       description: str,
+      resources: {
+        type: [
+          {
+            _id: false,
+            label: { type: String, trim: true, required: true },
+            url: { type: String, trim: true, required: true },
+          },
+        ],
+        default: [],
+      },
       order: { type: Number, default: 0 },
     },
     [[{ trackId: 1, status: 1, order: 1 }, {}]]

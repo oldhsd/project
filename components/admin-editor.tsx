@@ -127,6 +127,63 @@ function QuestionEditor({
     </fieldset>
   );
 }
+type ResourceLink = { label: string; url: string };
+function LinksEditor({
+  value,
+  onChange,
+}: {
+  value: ResourceLink[];
+  onChange: (value: ResourceLink[]) => void;
+}) {
+  function update(index: number, patch: Partial<ResourceLink>) {
+    onChange(value.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  }
+  return (
+    <fieldset className="space-y-4">
+      <legend className="mb-2 text-sm font-medium">PDFs & resource links</legend>
+      {value.map((item, index) => (
+        <div key={index} className="flex flex-col gap-2 rounded-lg border p-4 sm:flex-row sm:items-start">
+          <div className="grid flex-1 gap-2 sm:grid-cols-2">
+            <Input
+              aria-label={`Label for link ${index + 1}`}
+              placeholder="Label, e.g. Lecture slides (PDF)"
+              required
+              value={item.label}
+              onChange={(e) => update(index, { label: e.target.value })}
+            />
+            <Input
+              aria-label={`URL for link ${index + 1}`}
+              type="url"
+              placeholder="https://…"
+              required
+              value={item.url}
+              onChange={(e) => update(index, { url: e.target.value })}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Remove link ${index + 1}`}
+            onClick={() => onChange(value.filter((_, i) => i !== index))}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={value.length >= 50}
+        onClick={() => onChange([...value, { label: '', url: '' }])}
+      >
+        <Plus />
+        Add PDF / resource link
+      </Button>
+    </fieldset>
+  );
+}
 function ReferenceSelect({
   field,
   value,
@@ -203,7 +260,11 @@ function initialValues(resource: Resource, record: Row | null): Record<string, u
     const value =
       record?.[field.key] ??
       field.initial ??
-      (field.kind === 'checkbox' ? false : field.kind === 'questions' ? [] : '');
+      (field.kind === 'checkbox'
+        ? false
+        : field.kind === 'questions' || field.kind === 'links'
+          ? []
+          : '');
     values[field.key] =
       field.kind === 'lines'
         ? Array.isArray(value)
@@ -370,6 +431,10 @@ export function AdminEditor({
             if (field.kind === 'questions')
               return (
                 <QuestionEditor key={field.key} value={value as Question[]} onChange={change} />
+              );
+            if (field.kind === 'links')
+              return (
+                <LinksEditor key={field.key} value={value as ResourceLink[]} onChange={change} />
               );
             if (field.kind === 'checkbox')
               return (
