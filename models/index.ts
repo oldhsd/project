@@ -103,6 +103,8 @@ export const db: Record<Resource, Model<DbRow>> = {
       body: required,
       durationMinutes: { type: Number, default: 0 },
       resourceUrl: str,
+      videoUrl: str,
+      pdfUrl: str,
       order: { type: Number, default: 0 },
     },
     [[{ moduleId: 1, status: 1, order: 1 }, {}]]

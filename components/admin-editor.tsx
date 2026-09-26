@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
-import { Plus, Trash2, Upload } from 'lucide-react';
+import { FileText, Plus, Trash2, Upload } from 'lucide-react';
 import { api, ClientError, useRemote } from '@/lib/client';
 import { adminConfig, type EditorField } from '@/lib/admin-config';
 import { text, type Resource, type Row } from '@/lib/content-schema';
@@ -178,7 +178,8 @@ function LinksEditor({
               />
               <Input
                 aria-label={`URL for link ${index + 1}`}
-                type="url"
+                type="text"
+                inputMode="url"
                 placeholder="Paste a link, or upload a PDF below…"
                 required
                 value={item.url}
@@ -236,6 +237,85 @@ function LinksEditor({
         Add PDF / resource link
       </Button>
     </fieldset>
+  );
+}
+function PdfUploadEditor({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  async function upload(file: File) {
+    setBusy(true);
+    setError('');
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const result = await api<{ url: string; label: string }>('/api/admin/uploads', {
+        method: 'POST',
+        body: form,
+      });
+      onChange(result.url);
+    } catch (err) {
+      setError(err instanceof ClientError ? err.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="space-y-3">
+      {value ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm">
+          <FileText className="size-4 shrink-0 text-muted-foreground" />
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium underline underline-offset-4"
+          >
+            View uploaded PDF
+          </a>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            onClick={() => onChange('')}
+          >
+            <Trash2 />
+            Remove
+          </Button>
+        </div>
+      ) : null}
+      <div className="flex items-center gap-3">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (file) void upload(file);
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload />
+          {busy ? 'Uploading…' : value ? 'Replace PDF' : 'Upload PDF from computer'}
+        </Button>
+        {error && <span className="text-sm text-destructive">{error}</span>}
+      </div>
+    </div>
   );
 }
 function ReferenceSelect({
@@ -489,6 +569,18 @@ export function AdminEditor({
             if (field.kind === 'links')
               return (
                 <LinksEditor key={field.key} value={value as ResourceLink[]} onChange={change} />
+              );
+            if (field.kind === 'pdf-upload')
+              return (
+                <Field
+                  key={field.key}
+                  label={field.label}
+                  htmlFor={field.key}
+                  hint={field.hint}
+                  error={error?.fields[field.key]?.join(' ')}
+                >
+                  <PdfUploadEditor value={String(value || '')} onChange={change} />
+                </Field>
               );
             if (field.kind === 'checkbox')
               return (

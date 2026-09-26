@@ -1,13 +1,23 @@
 'use client';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, BookOpen, Paperclip } from 'lucide-react';
-import { useRemote } from '@/lib/client';
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  ExternalLink,
+  FileText,
+  Paperclip,
+  Youtube,
+} from 'lucide-react';
+import { api, useRemote } from '@/lib/client';
 import { type Row, text, number, list } from '@/lib/content-schema';
 import { dateLabel } from '@/lib/utils';
 import { catalogConfig, type CatalogResource } from '@/components/content-catalog';
 import { StudentAction } from '@/components/student-actions';
 import { AssessmentRunner } from '@/components/assessment-runner';
 import { Button } from '@/components/ui/button';
+import type { AccountData } from '@/lib/view-types';
 import {
   Badge,
   Card,
@@ -35,6 +45,112 @@ function Items({ title, items }: { title: string; items: string[] }) {
       </ul>
     </section>
   ) : null;
+}
+function LessonDoneCheckbox({ lessonId }: { lessonId: string }) {
+  const { status } = useSession();
+  const account = useRemote<AccountData>(status === 'authenticated' ? '/api/me' : null, 0);
+  const [busy, setBusy] = useState(false);
+  const done = !!account.data?.enrollments.some(
+    (enrollment) =>
+      Array.isArray(enrollment.completedLessonIds) &&
+      (enrollment.completedLessonIds as unknown[]).map(String).includes(lessonId)
+  );
+  async function markDone() {
+    if (done || busy || status !== 'authenticated') return;
+    setBusy(true);
+    try {
+      await api(`/api/lessons/${lessonId}/complete`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      account.reload();
+    } catch {
+      // The lesson page surfaces save errors; keep the checkbox unchanged here.
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <input
+      type="checkbox"
+      className="size-4 cursor-pointer disabled:cursor-default disabled:opacity-70"
+      aria-label="Mark lesson done"
+      checked={done}
+      disabled={done || busy || status !== 'authenticated' || account.loading}
+      onChange={markDone}
+    />
+  );
+}
+function LessonResourcesTable({ lessons, category }: { lessons: Row[]; category: string }) {
+  return (
+    <div className="overflow-x-auto rounded-md border">
+      <table className="w-full min-w-[640px] text-sm">
+        <thead>
+          <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+            <th className="w-10 px-4 py-3 font-medium">#</th>
+            <th className="px-4 py-3 font-medium">Title</th>
+            <th className="px-4 py-3 font-medium">Video Link</th>
+            <th className="px-4 py-3 font-medium">PDF Link</th>
+            <th className="w-16 px-4 py-3 text-center font-medium">Done</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lessons.map((lesson, index) => {
+            const videoUrl = text(lesson, 'videoUrl');
+            const pdfUrl = text(lesson, 'pdfUrl');
+            return (
+              <tr key={lesson.id} className="border-b last:border-0 hover:bg-accent/50">
+                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
+                <td className="px-4 py-3">
+                  <Link href={`/lessons/${lesson.id}`} className="font-medium hover:underline">
+                    {text(lesson, 'title')}
+                  </Link>
+                  {category && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{category}</p>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {videoUrl ? (
+                    <a
+                      href={videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                    >
+                      <Youtube className="size-4 shrink-0 text-red-500" />
+                      Watch Video
+                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {pdfUrl ? (
+                    <a
+                      href={pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                    >
+                      <FileText className="size-4 shrink-0 text-blue-500" />
+                      View PDF
+                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <LessonDoneCheckbox lessonId={lesson.id} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 export function ContentDetail({
   resource,
@@ -149,27 +265,14 @@ export function ContentDetail({
                           )}
                         </div>
                       )}
-                      <div className="mt-5 divide-y rounded-md border">
+                      <div className="mt-5">
                         {module.lessons.length ? (
-                          module.lessons.map((lesson) => (
-                            <Link
-                              className="flex items-center justify-between gap-3 px-4 py-4 text-sm hover:bg-accent"
-                              href={`/lessons/${lesson.id}`}
-                              key={lesson.id}
-                            >
-                              <span className="flex items-center gap-3">
-                                <BookOpen className="size-4 shrink-0" />
-                                {text(lesson, 'title')}
-                              </span>
-                              {number(lesson, 'durationMinutes') > 0 && (
-                                <span className="whitespace-nowrap text-xs text-muted-foreground">
-                                  {number(lesson, 'durationMinutes')} min
-                                </span>
-                              )}
-                            </Link>
-                          ))
+                          <LessonResourcesTable
+                            lessons={module.lessons}
+                            category={text(item, 'category')}
+                          />
                         ) : (
-                          <p className="p-4 text-sm text-muted-foreground">
+                          <p className="rounded-md border p-4 text-sm text-muted-foreground">
                             No lessons published in this module yet.
                           </p>
                         )}
@@ -190,13 +293,43 @@ export function ContentDetail({
           <>
             <Card className="p-6 sm:p-8">
               <p className="whitespace-pre-wrap text-base leading-8">{text(item, 'body')}</p>
-              {text(item, 'resourceUrl') && (
-                <Button asChild variant="outline" className="mt-6">
-                  <a href={text(item, 'resourceUrl')} target="_blank" rel="noopener noreferrer">
-                    Supporting resource
-                    <ArrowUpRight />
-                  </a>
-                </Button>
+              {(text(item, 'videoUrl') || text(item, 'pdfUrl') || text(item, 'resourceUrl')) && (
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {text(item, 'videoUrl') && (
+                    <Button asChild variant="outline">
+                      <a
+                        href={text(item, 'videoUrl')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Youtube className="text-red-500" />
+                        Watch Video
+                        <ArrowUpRight />
+                      </a>
+                    </Button>
+                  )}
+                  {text(item, 'pdfUrl') && (
+                    <Button asChild variant="outline">
+                      <a href={text(item, 'pdfUrl')} target="_blank" rel="noopener noreferrer">
+                        <FileText className="text-blue-500" />
+                        View PDF
+                        <ArrowUpRight />
+                      </a>
+                    </Button>
+                  )}
+                  {text(item, 'resourceUrl') && (
+                    <Button asChild variant="outline">
+                      <a
+                        href={text(item, 'resourceUrl')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Supporting resource
+                        <ArrowUpRight />
+                      </a>
+                    </Button>
+                  )}
+                </div>
               )}
             </Card>
             <StudentAction resource="lessons" item={item} />

@@ -16,6 +16,7 @@ export type EditorField = {
     | 'reference'
     | 'questions'
     | 'links'
+    | 'pdf-upload'
     | 'password';
   required?: boolean;
   options?: string[];
@@ -101,7 +102,14 @@ export const adminConfig: Record<Resource, Definition> = {
       reference('moduleId', 'Module', 'modules'),
       description('body', 'Lesson content'),
       field('durationMinutes', 'Duration in minutes', { kind: 'number', min: 0, initial: 0 }),
-      field('resourceUrl', 'Supporting resource URL', { kind: 'url' }),
+      field('videoUrl', 'Video link', {
+        kind: 'url',
+        hint: 'Paste the video URL for this lesson, e.g. a YouTube link.',
+      }),
+      field('pdfUrl', 'PDF', {
+        kind: 'pdf-upload',
+        hint: 'Upload a PDF from your computer. No link is needed.',
+      }),
       field('order', 'Display order', { kind: 'number', min: 0, initial: 0 }),
       publication,
     ],

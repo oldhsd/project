@@ -90,6 +90,8 @@ export const resourceSchemas = {
       body: z.string().trim().min(1).max(100000),
       durationMinutes: integer.default(0),
       resourceUrl: safeUrl,
+      videoUrl: safeUrl,
+      pdfUrl: safeUrl,
       order: integer.default(0),
       status: publication,
     })
