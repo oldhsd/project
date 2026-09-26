@@ -7,7 +7,6 @@ import {
   ArrowUpRight,
   ExternalLink,
   FileText,
-  Paperclip,
   Youtube,
 } from 'lucide-react';
 import { api, useRemote } from '@/lib/client';
@@ -81,7 +80,49 @@ function LessonDoneCheckbox({ lessonId }: { lessonId: string }) {
     />
   );
 }
-function LessonResourcesTable({ lessons, category }: { lessons: Row[]; category: string }) {
+type ModuleResource = { label: string; url: string };
+function resourceKind(url: string, label: string): 'pdf' | 'video' {
+  if (url.startsWith('/api/files/')) return 'pdf';
+  return /\.pdf(\?|#|$)/i.test(`${url} ${label}`) ? 'pdf' : 'video';
+}
+function VideoButton({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+    >
+      <Youtube className="size-4 shrink-0 text-red-500" />
+      Watch Video
+      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+    </a>
+  );
+}
+function PdfButton({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+    >
+      <FileText className="size-4 shrink-0 text-blue-500" />
+      View PDF
+      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+    </a>
+  );
+}
+const tableDash = <span className="text-xs text-muted-foreground">—</span>;
+function LessonResourcesTable({
+  lessons,
+  resources,
+  category,
+}: {
+  lessons: Row[];
+  resources: ModuleResource[];
+  category: string;
+}) {
   return (
     <div className="overflow-x-auto rounded-md border">
       <table className="w-full min-w-[640px] text-sm">
@@ -95,12 +136,35 @@ function LessonResourcesTable({ lessons, category }: { lessons: Row[]; category:
           </tr>
         </thead>
         <tbody>
+          {resources.map((resource, index) => {
+            const kind = resourceKind(resource.url, resource.label);
+            return (
+              <tr key={`resource-${index}`} className="border-b hover:bg-accent/50">
+                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
+                <td className="px-4 py-3">
+                  <span className="font-medium">{resource.label || 'Resource'}</span>
+                  {category && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{category}</p>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {kind === 'video' ? <VideoButton url={resource.url} /> : tableDash}
+                </td>
+                <td className="px-4 py-3">
+                  {kind === 'pdf' ? <PdfButton url={resource.url} /> : tableDash}
+                </td>
+                <td className="px-4 py-3 text-center">{tableDash}</td>
+              </tr>
+            );
+          })}
           {lessons.map((lesson, index) => {
             const videoUrl = text(lesson, 'videoUrl');
             const pdfUrl = text(lesson, 'pdfUrl');
             return (
               <tr key={lesson.id} className="border-b last:border-0 hover:bg-accent/50">
-                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {resources.length + index + 1}
+                </td>
                 <td className="px-4 py-3">
                   <Link href={`/lessons/${lesson.id}`} className="font-medium hover:underline">
                     {text(lesson, 'title')}
@@ -110,36 +174,10 @@ function LessonResourcesTable({ lessons, category }: { lessons: Row[]; category:
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  {videoUrl ? (
-                    <a
-                      href={videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-                    >
-                      <Youtube className="size-4 shrink-0 text-red-500" />
-                      Watch Video
-                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
-                    </a>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
+                  {videoUrl ? <VideoButton url={videoUrl} /> : tableDash}
                 </td>
                 <td className="px-4 py-3">
-                  {pdfUrl ? (
-                    <a
-                      href={pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-                    >
-                      <FileText className="size-4 shrink-0 text-blue-500" />
-                      View PDF
-                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
-                    </a>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
+                  {pdfUrl ? <PdfButton url={pdfUrl} /> : tableDash}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <LessonDoneCheckbox lessonId={lesson.id} />
@@ -244,39 +282,40 @@ export function ContentDetail({
                           {text(module, 'description')}
                         </p>
                       )}
-                      {Array.isArray(module.resources) && module.resources.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {(module.resources as { label?: unknown; url?: unknown }[]).map(
-                            (link, i) =>
-                              typeof link.url === 'string' && link.url ? (
-                                <a
-                                  key={i}
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-                                >
-                                  <Paperclip className="size-3.5 shrink-0" />
-                                  {typeof link.label === 'string' && link.label
-                                    ? link.label
-                                    : 'Resource'}
-                                </a>
-                              ) : null
-                          )}
-                        </div>
-                      )}
-                      <div className="mt-5">
-                        {module.lessons.length ? (
-                          <LessonResourcesTable
-                            lessons={module.lessons}
-                            category={text(item, 'category')}
-                          />
-                        ) : (
-                          <p className="rounded-md border p-4 text-sm text-muted-foreground">
-                            No lessons published in this module yet.
-                          </p>
-                        )}
-                      </div>
+                      {(() => {
+                        const moduleResources = (
+                          Array.isArray(module.resources) ? module.resources : []
+                        )
+                          .filter(
+                            (link): link is { label?: unknown; url?: unknown } =>
+                              !!link && typeof link === 'object'
+                          )
+                          .filter(
+                            (link) => typeof link.url === 'string' && link.url
+                          )
+                          .map((link) => ({
+                            label:
+                              typeof link.label === 'string' && link.label
+                                ? link.label
+                                : 'Resource',
+                            url: link.url as string,
+                          }));
+                        return (
+                          <div className="mt-5">
+                            {module.lessons.length || moduleResources.length ? (
+                              <LessonResourcesTable
+                                lessons={module.lessons}
+                                resources={moduleResources}
+                                category={text(item, 'category')}
+                              />
+                            ) : (
+                              <p className="rounded-md border p-4 text-sm text-muted-foreground">
+                                No lessons published in this module yet.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </Card>
                   ))}
                 </div>
